@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Batching Explained: An Interactive Infographic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); }
+        .gradient-text { background: linear-gradient(to right, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    </style>
+</head>
+        <section class="glass-card rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold">The Batching Timeline</h2>
+                    <p class="text-zinc-400 text-sm mt-1">Events are buffered until the <strong class="text-blue-400">2s window</strong> expires, then processed as one unit.</p>
+                </div>
+                <button id="restart-btn" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-sm font-semibold transition-colors border border-zinc-700">
+                    Restart Animation
+                </button>
+            </div>
+
+            <div class="h-48 bg-zinc-900/50 rounded-xl border border-zinc-800 p-4 relative flex items-center">
+                <canvas id="timeline-canvas" class="w-full h-full"></canvas>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="glass-card rounded-2xl p-8 border-t-4 border-t-blue-500">
+                <h3 class="text-xl font-bold mb-3">Batching vs. Queueing</h3>
+                <ul class="text-zinc-400 space-y-4">
+                    <li><strong class="text-white">Batching:</strong> Groups events by a <em>criteria</em> (e.g., "when we hit 50 items" or "every 5 seconds"). The goal is <strong>efficiency</strong>—reducing overhead by making one big trip instead of many small ones.</li>
+                    <li><strong class="text-white">Queueing:</strong> Handles events <em>sequentially</em>, usually because the system is resource-constrained. The goal is <strong>sustainability</strong>—making sure the system doesn't crash under load, even if processing items individually takes longer.</li>
+                </ul>
+            </div>
+
+            <div class="glass-card rounded-2xl p-8">
+                <h3 class="text-xl font-bold mb-3 flex items-center gap-2"><span>📦</span> The Shipping Analogy</h3>
+                <p class="text-zinc-400 leading-relaxed">
+                    <strong>Batching</strong> is like a delivery truck that only leaves the warehouse once it's full. <strong>Queueing</strong> is like a single-lane bridge where traffic must cross one by one so the structure doesn't collapse.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('timeline-canvas');
+        const ctx = canvas.getContext('2d');
+        const restartBtn = document.getElementById('restart-btn');
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            return rect;
+        }
+
+        let rect = resizeCanvas();
+        window.addEventListener('resize', () => { rect = resizeCanvas(); });
+
+        const totalDuration = 8000;
+        const batchWindow = 2000; // Process every 2s
+        
+        // Inputs arriving in bursts
+        const inputs = [500, 700, 1200, 2500, 2800, 3100, 4500, 6000];
+
+        let startTime = Date.now();
+        let animationFrameId;
+
+        function renderLoop() {
+            const now = Date.now();
+            const elapsed = now - startTime;
+            ctx.clearRect(0, 0, rect.width, rect.height);
+
+            // Draw Timeline
+            ctx.strokeStyle = '#3f3f46';
+            ctx.beginPath(); ctx.moveTo(40, rect.height / 2); ctx.lineTo(rect.width - 40, rect.height / 2); ctx.stroke();
+
+            // Draw Batch Windows
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = '#27272a';
+            for(let t = 0; t <= totalDuration; t += batchWindow) {
+                const x = 50 + (t / totalDuration) * (rect.width - 90);
+                ctx.beginPath(); ctx.moveTo(x, 20); ctx.lineTo(x, rect.height - 20); ctx.stroke();
+            }
+            ctx.setLineDash([]);
+
+            // Draw Inputs and Batches
+            inputs.forEach(inputTime => {
+                const x = 50 + (inputTime / totalDuration) * (rect.width - 90);
+                
+                // Input Dot
+                if(elapsed >= inputTime) {
+                    ctx.fillStyle = '#e4e4e7';
+                    ctx.beginPath(); ctx.arc(x, rect.height/2 - 20, 5, 0, Math.PI*2); ctx.fill();
+                }
+
+                // Batch Execution
+                const batchEndTime = (Math.floor(inputTime / batchWindow) + 1) * batchWindow;
+                if(elapsed >= batchEndTime) {
+                    const bx = 50 + (batchEndTime / totalDuration) * (rect.width - 90);
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.shadowColor = '#38bdf8'; ctx.shadowBlur = 10;
+                    ctx.beginPath(); ctx.arc(bx, rect.height/2 + 20, 8, 0, Math.PI*2); ctx.fill();
+                    ctx.shadowBlur = 0;
+                    
+                    // Connection
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.beginPath(); ctx.moveTo(x, rect.height/2 - 15); ctx.lineTo(bx, rect.height/2 + 15); ctx.stroke();
+                }
+            });
+
+            if (elapsed < totalDuration + 1000) animationFrameId = requestAnimationFrame(renderLoop);
+        }
+
+        renderLoop();
+        restartBtn.addEventListener('click', () => {
+            cancelAnimationFrame(animationFrameId);
+            startTime = Date.now();
+            renderLoop();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rate Limiting Explained: An Interactive Infographic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b; /* Zinc 950 */
+            color: #f4f4f5; /* Zinc 50 */
+        }
+        
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #f59e0b, #e11d48); /* Amber to Rose */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Shake animation for blocked requests */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+        .shake-animation {
+            animation: shake 0.3s ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto space-y-12">
+        
+        <!-- HEADER -->
+        <header class="text-center space-y-4 py-12">
+            <h4 class="text-amber-500 font-bold tracking-widest uppercase text-sm">Execution Timing Patterns</h4>
+            <h1 class="text-5xl md:text-6xl font-bold tracking-tight">Understanding <span class="gradient-text">Rate Limiting</span></h1>
+            <p class="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                A defensive programming technique that restricts the number of times a function or API can be called within a strict, fixed time window to prevent abuse.
+            </p>
+        </header>
+
+        <!-- THE VISUALIZER -->
+        <section class="glass-card rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-500 to-rose-500"></div>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold">Fixed Window Timeline</h2>
+                    <p class="text-zinc-400 text-sm mt-1">Maximum <strong class="text-amber-500">3 executions</strong> allowed per <strong class="text-zinc-200">2-second window</strong>. Excess inputs are outright blocked.</p>
+                </div>
+                <button id="restart-btn" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-sm font-semibold transition-colors border border-zinc-700">
+                    Restart Animation
+                </button>
+            </div>
+
+            <div class="relative w-full h-64 bg-zinc-900/50 rounded-xl border border-zinc-800 p-4">
+                <canvas id="timeline-canvas" class="w-full h-full block"></canvas>
+            </div>
+            
+            <div class="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-slate-500"></div>
+                    <span class="text-zinc-400">Raw Input</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-0 h-4 border-l-2 border-dashed border-zinc-600"></div>
+                    <span class="text-zinc-400">Window Boundary</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-amber-500 shadow-[0_0_8px_#f59e0b]"></div>
+                    <span class="text-zinc-200 font-semibold">Allowed Execution</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="flex items-center justify-center w-4 h-4 text-rose-500 font-bold leading-none">×</div>
+                    <span class="text-rose-400 font-semibold">Blocked (HTTP 429)</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ANALOGY & DEFINITION -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="glass-card rounded-2xl p-8">
+                <div class="w-12 h-12 bg-amber-500/10 rounded-xl flex items-center justify-center mb-6 border border-amber-500/20">
+                    <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3">How it Works</h3>
+                <p class="text-zinc-400 leading-relaxed">
+                    Time is divided into fixed buckets (e.g., 0:00 to 0:59, 1:00 to 1:59). You are given a strict quota of operations per bucket. As events occur, the quota decreases. If the quota hits zero, the system rejects all further events (dropping them) until the next time bucket begins and the quota is fully refreshed.
+                </p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-8 border-t-4 border-t-rose-500">
+                <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
+                    <span>🛑</span> The Nightclub Bouncer Analogy
+                </h3>
+                <p class="text-zinc-400 leading-relaxed mb-6">
+                    A popular club has a strict rule: <strong>Only 3 VIPs allowed inside every hour.</strong> If 5 VIPs show up at 10:15, the first 3 enter. The remaining 2 are rejected and told to return at 11:00 when the quota resets.
+                </p>
+                
+                <!-- VIP Tokens visualizer -->
+                <div class="flex justify-center gap-4 mb-3" id="vip-tokens">
+                    <div class="w-10 h-10 rounded-full border-2 border-amber-500 bg-amber-500/20 flex items-center justify-center text-amber-500 token transition-colors">1</div>
+                    <div class="w-10 h-10 rounded-full border-2 border-amber-500 bg-amber-500/20 flex items-center justify-center text-amber-500 token transition-colors">2</div>
+                    <div class="w-10 h-10 rounded-full border-2 border-amber-500 bg-amber-500/20 flex items-center justify-center text-amber-500 token transition-colors">3</div>
+                </div>
+                <p class="text-xs text-zinc-500 text-center uppercase tracking-widest mt-4" id="bouncer-status">Quota Full: Welcome in.</p>
+            </div>
+        </div>
+
+        <!-- REAL WORLD EXAMPLES -->
+        <section class="space-y-6">
+            <h2 class="text-2xl font-bold text-center">Real-World Use Cases</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6 hover:border-amber-500/50 transition-colors">
+                    <h4 class="text-lg font-bold text-zinc-200 mb-2">1. Public API Protection</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-4">
+                        Services like Twitter or GitHub limit clients to 100 API requests per hour. If a developer runs a buggy loop that makes 10,000 requests, the server safely responds with a <code>429 Too Many Requests</code> error, protecting itself from crashing.
+                    </p>
+                    <div class="px-3 py-2 bg-black rounded border border-zinc-800 code-font text-xs text-zinc-500 flex justify-between">
+                        <span>API Quota:</span>
+                        <span class="text-amber-400 font-bold">100 req / hour</span>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6 hover:border-amber-500/50 transition-colors">
+                    <h4 class="text-lg font-bold text-zinc-200 mb-2">2. Stopping Brute Force</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-4">
+                        Hackers use scripts to guess passwords thousands of times a second. Rate limiting a login endpoint to 5 attempts per minute completely neutralizes brute-force dictionary attacks.
+                    </p>
+                    <div class="px-3 py-2 bg-black rounded border border-zinc-800 code-font text-xs text-zinc-500 flex justify-between">
+                        <span>Login Attempts:</span>
+                        <span class="text-amber-400 font-bold">5 per minute max</span>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6 hover:border-amber-500/50 transition-colors">
+                    <h4 class="text-lg font-bold text-zinc-200 mb-2">3. SaaS Billing Tiers</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-4">
+                        AI companies offering "Free" vs "Pro" plans use rate limits to enforce fair usage. Free users might be capped at 10 image generations per day, while paying users get an elevated rate limit threshold.
+                    </p>
+                    <div class="px-3 py-2 bg-black rounded border border-zinc-800 code-font text-xs text-zinc-500 flex justify-between">
+                        <span>Free Tier:</span>
+                        <span class="text-amber-400 font-bold">10 gens / day</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+        
+        <footer class="text-center py-8 text-zinc-500 text-sm">
+            <p>Execution Timing Patterns &bull; Headless Architecture Series</p>
+        </footer>
+    </div>
+
+    <!-- Animation Script for the Canvas Infographic -->
+    <script>
+        const canvas = document.getElementById('timeline-canvas');
+        const ctx = canvas.getContext('2d');
+        const restartBtn = document.getElementById('restart-btn');
+        const bouncerStatus = document.getElementById('bouncer-status');
+        const tokens = document.querySelectorAll('.token');
+        const vipContainer = document.getElementById('vip-tokens');
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            return rect;
+        }
+
+        let rect = resizeCanvas();
+        window.addEventListener('resize', () => { rect = resizeCanvas(); });
+
+        // Animation Configuration (Fixed Window Counter)
+        const totalDuration = 8000; 
+        const windowDuration = 2000; // 2 seconds per fixed window
+        const maxExecutionsPerWindow = 3;
+        
+        // Simulated scenario: Bursts of requests that breach limits
+        const scenario = [
+            // Window 1: 0 - 2s
+            300, 700, 1000, 1400, 1700, // 5 inputs (3 allowed, 2 blocked)
+            // Window 2: 2 - 4s
+            2500, 3200,                 // 2 inputs (2 allowed, 0 blocked)
+            // Window 3: 4 - 6s
+            4100, 4200, 4400, 4800, 5200, 5800 // 6 inputs (3 allowed, 3 blocked)
+        ];
+
+        // Pre-calculate allowed vs blocked executions
+        let executions = [];
+        let blocked = [];
+        let windowCounts = {};
+
+        scenario.forEach(eventTime => {
+            const windowIndex = Math.floor(eventTime / windowDuration);
+            if (!windowCounts[windowIndex]) {
+                windowCounts[windowIndex] = 0;
+            }
+
+            if (windowCounts[windowIndex] < maxExecutionsPerWindow) {
+                executions.push(eventTime);
+                windowCounts[windowIndex]++;
+            } else {
+                blocked.push(eventTime);
+            }
+        });
+
+        let startTime = Date.now();
+        let animationFrameId;
+
+        // Colors
+        const colAllowed = '#f59e0b'; // Amber 500
+        const colBlocked = '#e11d48'; // Rose 600
+        const colGrid = '#27272a';
+        const colText = '#71717a';
+
+        function renderLoop() {
+            const now = Date.now();
+            const elapsed = now - startTime;
+
+            ctx.clearRect(0, 0, rect.width, rect.height);
+
+            // Draw Base Timeline Horizon
+            ctx.strokeStyle = colGrid;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(40, rect.height / 2);
+            ctx.lineTo(rect.width - 40, rect.height / 2);
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = colText;
+            ctx.font = '12px Inter, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('Input', 35, rect.height / 2 - 25);
+            ctx.fillText('Execute', 35, rect.height / 2 + 30);
+
+            const mapX = (time) => 50 + (time / totalDuration) * (rect.width - 90);
+
+            // Draw Fixed Window Boundaries
+            ctx.strokeStyle = '#3f3f46';
+            ctx.setLineDash([4, 4]);
+            for (let t = 0; t <= totalDuration; t += windowDuration) {
+                const x = mapX(t);
+                ctx.beginPath();
+                ctx.moveTo(x, 20);
+                ctx.lineTo(x, rect.height - 20);
+                ctx.stroke();
+                
+                // Window Label
+                ctx.fillStyle = '#52525b';
+                ctx.textAlign = 'left';
+                ctx.fillText(`Window ${(t/1000)+1}`, x + 5, 20);
+            }
+            ctx.setLineDash([]);
+
+            // Draw active window highlight
+            const currentWindowIndex = Math.floor(elapsed / windowDuration);
+            if (elapsed <= totalDuration) {
+                const winStartX = mapX(currentWindowIndex * windowDuration);
+                const winEndX = mapX((currentWindowIndex + 1) * windowDuration);
+                ctx.fillStyle = 'rgba(245, 158, 11, 0.05)'; // Amber tint
+                ctx.fillRect(winStartX, 25, winEndX - winStartX, rect.height - 50);
+            }
+
+            // Current Time Scrubber
+            const currentX = mapX(elapsed);
+            if (elapsed <= totalDuration) {
+                ctx.strokeStyle = '#71717a';
+                ctx.beginPath();
+                ctx.moveTo(currentX, 10);
+                ctx.lineTo(currentX, rect.height - 10);
+                ctx.stroke();
+            }
+
+            // Draw Inputs and Outcomes
+            let tokensUsedThisWindow = 0;
+            let justBlocked = false;
+
+            scenario.forEach(eventTime => {
+                if (elapsed >= eventTime) {
+                    const x = mapX(eventTime);
+                    const isAllowed = executions.includes(eventTime);
+                    
+                    // Count tokens used for the *current* window to update analogy UI
+                    if (Math.floor(eventTime / windowDuration) === currentWindowIndex) {
+                         if (isAllowed) tokensUsedThisWindow++;
+                    }
+
+                    // Raw Input Dot
+                    ctx.beginPath();
+                    ctx.arc(x, rect.height / 2 - 30, 5, 0, Math.PI * 2);
+                    ctx.fillStyle = isAllowed ? '#e4e4e7' : '#71717a';
+                    ctx.fill();
+
+                    if (isAllowed) {
+                        // Execution Dot
+                        ctx.beginPath();
+                        ctx.arc(x, rect.height / 2 + 30, 7, 0, Math.PI * 2);
+                        ctx.fillStyle = colAllowed;
+                        ctx.shadowColor = colAllowed;
+                        ctx.shadowBlur = 10;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+
+                        // Connection Line
+                        ctx.strokeStyle = 'rgba(245, 158, 11, 0.5)';
+                        ctx.beginPath();
+                        ctx.moveTo(x, rect.height / 2 - 25);
+                        ctx.lineTo(x, rect.height / 2 + 25);
+                        ctx.stroke();
+                    } else {
+                        // Draw X for Blocked
+                        ctx.strokeStyle = colBlocked;
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(x - 5, rect.height / 2 + 25);
+                        ctx.lineTo(x + 5, rect.height / 2 + 35);
+                        ctx.moveTo(x + 5, rect.height / 2 + 25);
+                        ctx.lineTo(x - 5, rect.height / 2 + 35);
+                        ctx.stroke();
+
+                        // Short blocked connection line
+                        ctx.strokeStyle = 'rgba(225, 29, 72, 0.5)';
+                        ctx.beginPath();
+                        ctx.moveTo(x, rect.height / 2 - 25);
+                        ctx.lineTo(x, rect.height / 2 + 10);
+                        ctx.stroke();
+
+                        // Detect if a block *just* happened for CSS shaking
+                        if (elapsed - eventTime < 100) {
+                            justBlocked = true;
+                        }
+                    }
+                }
+            });
+
+            // Analogy UI Updates
+            if (elapsed < totalDuration) {
+                // Update Tokens
+                tokens.forEach((token, index) => {
+                    if (index < (maxExecutionsPerWindow - tokensUsedThisWindow)) {
+                        // Token available
+                        token.className = "w-10 h-10 rounded-full border-2 border-amber-500 bg-amber-500/20 flex items-center justify-center text-amber-500 token transition-colors";
+                    } else {
+                        // Token spent
+                        token.className = "w-10 h-10 rounded-full border-2 border-zinc-700 bg-zinc-800 flex items-center justify-center text-zinc-600 token transition-colors";
+                    }
+                });
+
+                if (justBlocked) {
+                    bouncerStatus.innerText = "Quota Exceeded! Entry Denied.";
+                    bouncerStatus.classList.remove('text-zinc-500', 'text-amber-500');
+                    bouncerStatus.classList.add('text-rose-500');
+                    
+                    // Trigger CSS Shake
+                    vipContainer.classList.remove('shake-animation');
+                    void vipContainer.offsetWidth; // trigger reflow
+                    vipContainer.classList.add('shake-animation');
+                } else if (tokensUsedThisWindow < maxExecutionsPerWindow) {
+                    bouncerStatus.innerText = "Quota Available: Welcome in.";
+                    bouncerStatus.classList.remove('text-rose-500', 'text-amber-500');
+                    bouncerStatus.classList.add('text-zinc-500');
+                } else {
+                    bouncerStatus.innerText = "Quota Empty: Waiting for window reset...";
+                    bouncerStatus.classList.remove('text-rose-500', 'text-zinc-500');
+                    bouncerStatus.classList.add('text-amber-500');
+                }
+
+            } else {
+                 tokens.forEach(t => t.className = "w-10 h-10 rounded-full border-2 border-amber-500 bg-amber-500/20 flex items-center justify-center text-amber-500 token transition-colors");
+                 bouncerStatus.innerText = "Simulation complete.";
+                 bouncerStatus.classList.remove('text-rose-500', 'text-amber-500');
+                 bouncerStatus.classList.add('text-zinc-500');
+            }
+
+            if (elapsed < totalDuration + 1000) {
+                animationFrameId = requestAnimationFrame(renderLoop);
+            } else {
+                ctx.fillStyle = colText;
+                ctx.font = 'italic 12px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Animation Complete. Click restart to play again.', rect.width / 2, rect.height - 20);
+            }
+        }
+
+        renderLoop();
+
+        restartBtn.addEventListener('click', () => {
+            cancelAnimationFrame(animationFrameId);
+            startTime = Date.now();
+            vipContainer.classList.remove('shake-animation');
+            renderLoop();
+        });
+
+    </script>
+</body>
+</html>
