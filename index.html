@@ -2,11 +2,182 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>React 19 + TypeScript + Vite + Tailwind CSS v4 Starter Kit</title>
+
+    <!-- ============================================================
+         PRIMARY SEO TAGS
+    ============================================================ -->
+    <title>Execution Timing Simulator — Debounce, Throttle, Rate Limit & More</title>
+    <meta
+      name="description"
+      content="An interactive browser tool that visualises how senior developers control high-frequency events. Compare Debounce, Throttle, Rate Limit, Queue, and Batch patterns side-by-side in real time."
+    />
+    <meta name="keywords" content="debounce, throttle, rate limit, batch, queue, execution timing, JavaScript patterns, senior developer, frontend patterns, event handling, React, tapaScript" />
+    <meta name="author" content="tapaScript — Tapas Adhikary" />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+
+    <!-- Canonical URL — update to your production domain before deploying -->
+    <link rel="canonical" href="https://analyzer.tapascript.io/" />
+
+    <!-- ============================================================
+         FAVICON & APP ICONS — replace placeholder paths before deploying
+    ============================================================ -->
+    <!-- <link rel="icon" type="image/png" sizes="32x32"   href="/favicon-32x32.png" /> -->
+    <!-- <link rel="icon" type="image/png" sizes="16x16"   href="/favicon-16x16.png" /> -->
+    <!-- <link rel="apple-touch-icon" sizes="180x180"       href="/apple-touch-icon.png" /> -->
+    <!-- <link rel="manifest"                               href="/site.webmanifest" /> -->
+    <!-- <meta name="theme-color"                           content="#0d9488" /> -->
+    <!-- Temporary favicon until real assets are provided -->
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+
+    <!-- ============================================================
+         OPEN GRAPH (Facebook / LinkedIn / Slack previews)
+         Replace placeholder values before deploying
+    ============================================================ -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:site_name"   content="Execution Timing Simulator" />
+    <meta property="og:locale"      content="en_US" />
+    <meta property="og:url"         content="https://analyzer.tapascript.io/og-image.png" />
+    <meta property="og:title"       content="Execution Timing Simulator — See How Senior Devs Think" />
+    <meta
+      property="og:description"
+      content="An interactive browser tool that visualises how senior developers control high-frequency events. Compare Debounce, Throttle, Rate Limit, Queue, and Batch patterns side-by-side in real time."
+    />
+    <meta property="og:image"       content="https://analyzer.tapascript.io/og-image.png" /> 
+   <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" /> 
+   <meta property="og:image:alt"    content="Execution Timing Simulator showing debounce, throttle and more patterns in real time" />
+
+    <!-- ============================================================
+         TWITTER / X CARD
+         Replace placeholder values before deploying
+    ============================================================ -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:site"        content="@tapasadhikary" />
+    <meta name="twitter:creator"     content="@tapasadhikary" />
+    <meta name="twitter:title"       content="Execution Timing Simulator — See How Senior Devs Think" />
+    <meta
+      name="twitter:description"
+      content="Watch Debounce, Throttle, Rate Limit, Queue, and Batch patterns fire in real time. Click rapidly to see which events get dropped, delayed, or batched."
+    />
+    <meta name="twitter:image"       content="https://analyzer.tapascript.io/og-image.png" />
+    <meta name="twitter:image:alt"   content="Execution Timing Simulator live demo screenshot" />
+
+    <!-- ============================================================
+         STRUCTURED DATA — JSON-LD
+         Powers rich results in Google, Bing, and AI answer engines
+         (AEO / GEO: makes the tool indexable as a named WebApplication)
+    ============================================================ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "@id": "https://analyzer.tapascript.io/#webapp",
+          "name": "Execution Timing Simulator",
+          "url": "https://analyzer.tapascript.io/",
+          "description": "An interactive browser tool that visualises how senior developers control high-frequency events. Compare Debounce, Throttle, Rate Limit, Queue, and Batch patterns side-by-side in real time.",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "All",
+          "browserRequirements": "Requires a modern browser with JavaScript enabled",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "Raw click event visualisation",
+            "Debounce pattern simulation",
+            "Throttle pattern simulation",
+            "Rate Limit pattern simulation",
+            "Queue-based execution simulation",
+            "Batch execution simulation",
+            "Pause and inspect timeline",
+            "Adjustable time window"
+          ],
+          "keywords": "debounce, throttle, rate limit, batch, queue, execution timing, JavaScript patterns, event handling",
+          "author": {
+            "@type": "Person",
+            "name": "Tapas Adhikary",
+            "url": "https://youtube.com/@tapasadhikary",
+            "sameAs": [
+              "https://youtube.com/@tapasadhikary",
+              "https://twitter.com/tapasadhikary"
+            ]
+          },
+          "publisher": {
+            "@type": "Organization",
+            "name": "tapaScript",
+            "url": "https://youtube.com/@tapasadhikary"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://analyzer.tapascript.io/#webpage",
+          "url": "https://analyzer.tapascript.io/",
+          "name": "Execution Timing Simulator",
+          "description": "See how Debounce, Throttle, Rate Limit, Queue, and Batch execution patterns behave under high-frequency events — interactively, in real time.",
+          "inLanguage": "en-US",
+          "isPartOf": {
+            "@id": "https://analyzer.tapascript.io/#webapp"
+          },
+          "about": {
+            "@type": "SoftwareApplication",
+            "name": "Execution Timing Simulator"
+          },
+          "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://analyzer.tapascript.io/"
+              }
+            ]
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is the difference between debounce and throttle?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Debounce delays execution until a burst of events has stopped for a set period. Throttle allows execution at most once per time interval regardless of how many events fire. Use debounce for search inputs; use throttle for scroll handlers."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is rate limiting in JavaScript?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Rate limiting restricts how many times a function can execute within a fixed time window. Unlike throttle, it queues or drops calls that exceed the limit, making it useful for API call budgeting."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is a batch execution pattern?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Batching accumulates multiple calls within a time window and processes them all at once in a single execution. It reduces the number of expensive operations like network requests or DOM updates."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
+    <noscript>
+      <p style="font-family: sans-serif; text-align: center; padding: 2rem;">
+        This application requires JavaScript to run. Please enable JavaScript in your browser to use the
+        <strong>Execution Timing Simulator</strong>.
+      </p>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

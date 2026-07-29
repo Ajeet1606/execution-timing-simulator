@@ -11,6 +11,9 @@ export interface TimelineEvent {
 interface CanvasTimelineProps {
   events: TimelineEvent[];
   windowMs?: number; 
+  isPaused: boolean;
+  pausedTimeRef: React.MutableRefObject<number | null>;
+  totalPausedDurationRef: React.MutableRefObject<number>;
 }
 
 const LANES: { id: PatternType; label: string; color: string }[] = [
@@ -22,12 +25,22 @@ const LANES: { id: PatternType; label: string; color: string }[] = [
   { id: 'batch', label: 'Batch', color: '#8b5cf6' },          // violet-500
 ];
 
-export function CanvasTimeline({ events, windowMs = 6000 }: CanvasTimelineProps) {
+export function CanvasTimeline({ 
+  events, 
+  windowMs = 6000,
+  isPaused,
+  pausedTimeRef,
+  totalPausedDurationRef
+}: CanvasTimelineProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // Keep events in a ref so the render loop always has fresh data without restarting
   const eventsRef = useRef(events);
   eventsRef.current = events;
+
+  // Use a ref for isPaused to prevent closures from capturing stale values in the loop
+  const isPausedRef = useRef(isPaused);
+  isPausedRef.current = isPaused;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -47,7 +60,10 @@ export function CanvasTimeline({ events, windowMs = 6000 }: CanvasTimelineProps)
     const laneHeight = rect.height / LANES.length;
 
     const renderLoop = () => {
-      const now = Date.now();
+      // Virtual time: when paused, now is frozen at the moment pause was pressed
+      const now = isPausedRef.current
+        ? (pausedTimeRef.current ?? Date.now()) - totalPausedDurationRef.current
+        : Date.now() - totalPausedDurationRef.current;
       
       // CRITICAL: Wipe canvas clean every single frame to prevent text ghosting/smearing
       ctx.clearRect(0, 0, rect.width, rect.height);
@@ -122,14 +138,33 @@ export function CanvasTimeline({ events, windowMs = 6000 }: CanvasTimelineProps)
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [windowMs]); // Re-bind only if time window changes
+  }, [windowMs, pausedTimeRef, totalPausedDurationRef]); // Re-bind only if time window changes
 
   return (
-    <div className="w-full h-105 bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl">
-      <canvas 
-        ref={canvasRef} 
-        className="w-full h-full block"
-      />
+    <div className="w-full flex flex-col gap-0">
+      {/* Paused badge — lives outside the canvas so it never overlaps dots */}
+      <div
+        className={`flex items-center justify-center gap-2 py-2 rounded-t-xl text-xs font-semibold tracking-wide transition-all duration-200 ${
+          isPaused
+            ? 'bg-amber-600/90 text-white'
+            : 'bg-zinc-900 text-zinc-600 border-b border-zinc-800'
+        }`}
+      >
+        {isPaused ? (
+          <>
+            <span>⏸</span>
+            <span>PAUSED — inspecting snapshot</span>
+          </>
+        ) : (
+          <span>● LIVE</span>
+        )}
+      </div>
+      <div className="w-full h-105 bg-zinc-950 border border-zinc-800 rounded-b-xl overflow-hidden shadow-2xl">
+        <canvas 
+          ref={canvasRef} 
+          className="w-full h-full block"
+        />
+      </div>
     </div>
   );
 }
