@@ -21,20 +21,12 @@ export function ExecutionSimulator() {
   const pausedTimeRef = useRef<number | null>(null);
   const totalPausedDurationRef = useRef<number>(0);
 
-  // Calculate virtual time that remains static when paused
+  // Compute virtual time: frozen at pausedTimeRef snapshot when paused
   const getVirtualNow = useCallback(() => {
     if (isPausedRef.current) {
-      if (pausedTimeRef.current === null) {
-        pausedTimeRef.current = Date.now();
-      }
-      return pausedTimeRef.current - totalPausedDurationRef.current;
-    } else {
-      if (pausedTimeRef.current !== null) {
-        totalPausedDurationRef.current += Date.now() - pausedTimeRef.current;
-        pausedTimeRef.current = null;
-      }
-      return Date.now() - totalPausedDurationRef.current;
+      return (pausedTimeRef.current ?? Date.now()) - totalPausedDurationRef.current;
     }
+    return Date.now() - totalPausedDurationRef.current;
   }, []);
 
   // Helper to push new dots to our visualizer
@@ -130,8 +122,10 @@ export function ExecutionSimulator() {
                     const next = !prev;
                     isPausedRef.current = next;
                     if (next) {
+                      // Snapshot the current wall-clock time as the pause point
                       pausedTimeRef.current = Date.now();
                     } else {
+                      // Accumulate the elapsed pause duration before resuming
                       if (pausedTimeRef.current !== null) {
                         totalPausedDurationRef.current += Date.now() - pausedTimeRef.current;
                         pausedTimeRef.current = null;
