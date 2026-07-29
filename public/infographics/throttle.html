@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Throttling Explained: An Interactive Infographic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b; /* Zinc 950 */
+            color: #f4f4f5; /* Zinc 50 */
+        }
+        
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #10b981, #14b8a6); /* Emerald to Teal */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto space-y-12">
+        
+        <!-- HEADER -->
+        <header class="text-center space-y-4 py-12">
+            <h4 class="text-emerald-500 font-bold tracking-widest uppercase text-sm">Execution Timing Patterns</h4>
+            <h1 class="text-5xl md:text-6xl font-bold tracking-tight">Understanding <span class="gradient-text">Throttling</span></h1>
+            <p class="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                A programming technique that guarantees a function runs at a consistent, steady rate. It limits the execution of a rapidly firing event to at most once every <em>N</em> milliseconds.
+            </p>
+        </header>
+
+        <!-- THE VISUALIZER -->
+        <section class="glass-card rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500"></div>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold">The Throttle Timeline</h2>
+                    <p class="text-zinc-400 text-sm mt-1">Watch how the first input executes immediately, while subsequent inputs are ignored until the cooldown expires.</p>
+                </div>
+                <button id="restart-btn" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-sm font-semibold transition-colors border border-zinc-700">
+                    Restart Animation
+                </button>
+            </div>
+
+            <div class="relative w-full h-64 bg-zinc-900/50 rounded-xl border border-zinc-800 p-4">
+                <canvas id="timeline-canvas" class="w-full h-full block"></canvas>
+            </div>
+            
+            <div class="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-slate-500"></div>
+                    <span class="text-zinc-400">Ignored Input</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-zinc-200"></div>
+                    <span class="text-zinc-400">Triggered Input</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-emerald-900/50 border border-emerald-500"></div>
+                    <span class="text-zinc-400">Cooldown Window</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]"></div>
+                    <span class="text-zinc-200 font-semibold">Execution</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ANALOGY & DEFINITION -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="glass-card rounded-2xl p-8">
+                <div class="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center mb-6 border border-emerald-500/20">
+                    <svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3">How it Works</h3>
+                <p class="text-zinc-400 leading-relaxed">
+                    When an event fires, the function executes immediately and enters a "cooldown" phase. During this cooldown, any further triggers are completely ignored. Once the cooldown timer expires, the function is ready to accept and execute the very next event.
+                </p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-8 border-t-4 border-t-teal-500">
+                <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
+                    <span>☕</span> The Coffee Machine Analogy
+                </h3>
+                <p class="text-zinc-400 leading-relaxed mb-6">
+                    When you press the button, the machine starts brewing (takes 3 seconds). If you impatiently mash the button 10 more times while it's brewing, the machine ignores you. It only listens to the button <strong>again after the cup is finished.</strong>
+                </p>
+                <div class="w-full bg-zinc-900 rounded-full h-2 mb-1 overflow-hidden relative">
+                    <div id="machine-bar" class="bg-teal-500 h-2 rounded-full w-0"></div>
+                </div>
+                <p class="text-xs text-zinc-500 text-center uppercase tracking-widest mt-2" id="machine-status">Ready for order...</p>
+            </div>
+        </div>
+
+        <!-- REAL WORLD EXAMPLES -->
+        <section class="space-y-6">
+            <h2 class="text-2xl font-bold text-center">Real-World Use Cases</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6 hover:border-emerald-500/50 transition-colors">
+                    <h4 class="text-lg font-bold text-zinc-200 mb-2">1. Infinite Scrolling</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-4">
+                        As a user scrolls, the 'scroll' event fires hundreds of times per second. Throttling checks how close they are to the bottom every 250ms, drastically saving CPU processing power.
+                    </p>
+                    <div class="px-3 py-2 bg-black rounded border border-zinc-800 code-font text-xs text-zinc-500 flex justify-between">
+                        <span>Scroll Checks:</span>
+                        <span class="text-emerald-400 font-bold">4 per second max</span>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6 hover:border-emerald-500/50 transition-colors">
+                    <h4 class="text-lg font-bold text-zinc-200 mb-2">2. Prevent Button Mashing</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-4">
+                        If a user clicks the "Submit Payment" button 5 times in a panic, throttling ensures the payment request only fires once, ignoring the frantic subsequent clicks.
+                    </p>
+                    <div class="px-3 py-2 bg-black rounded border border-zinc-800 code-font text-xs text-zinc-500 flex justify-between">
+                        <span>Payment Submissions:</span>
+                        <span class="text-emerald-400 font-bold">1 safe request</span>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6 hover:border-emerald-500/50 transition-colors">
+                    <h4 class="text-lg font-bold text-zinc-200 mb-2">3. UI Dragging / Resizing</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-4">
+                        When dragging an element across the screen, calculating complex DOM updates on every micro-movement causes lag. Throttling caps the updates to a smooth 60 frames per second.
+                    </p>
+                    <div class="px-3 py-2 bg-black rounded border border-zinc-800 code-font text-xs text-zinc-500 flex justify-between">
+                        <span>UI Reflows:</span>
+                        <span class="text-emerald-400 font-bold">Capped at 60fps</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+        
+        <footer class="text-center py-8 text-zinc-500 text-sm">
+            <p>Execution Timing Patterns &bull; Headless Architecture Series</p>
+        </footer>
+    </div>
+
+    <!-- Animation Script for the Canvas Infographic -->
+    <script>
+        const canvas = document.getElementById('timeline-canvas');
+        const ctx = canvas.getContext('2d');
+        const restartBtn = document.getElementById('restart-btn');
+        const machineBar = document.getElementById('machine-bar');
+        const machineStatus = document.getElementById('machine-status');
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            return rect;
+        }
+
+        let rect = resizeCanvas();
+        window.addEventListener('resize', () => { rect = resizeCanvas(); });
+
+        // Animation Configuration
+        const totalDuration = 8000; 
+        const throttleWait = 1500; // 1.5 seconds cooldown
+        
+        // Simulated user typing scenario: bursts of inputs
+        const scenario = [
+            500, 700, 900,         // Click burst 1
+            2500, 2700,            // Click burst 2
+            4500, 4700, 4900, 5800 // Click burst 3 (spans across a cooldown end)
+        ];
+
+        // Pre-calculate which inputs trigger an execution and which are ignored
+        let executions = [];
+        let cooldowns = [];
+        let lastExecTime = -throttleWait; // Initialize so first event always fires
+
+        scenario.forEach(eventTime => {
+            if (eventTime >= lastExecTime + throttleWait) {
+                executions.push(eventTime);
+                cooldowns.push({ start: eventTime, end: eventTime + throttleWait });
+                lastExecTime = eventTime;
+            }
+        });
+
+        let startTime = Date.now();
+        let animationFrameId;
+
+        function renderLoop() {
+            const now = Date.now();
+            const elapsed = now - startTime;
+
+            ctx.clearRect(0, 0, rect.width, rect.height);
+
+            // Draw Base Timeline Grid
+            ctx.strokeStyle = '#27272a';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(40, rect.height / 2);
+            ctx.lineTo(rect.width - 40, rect.height / 2);
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = '#71717a';
+            ctx.font = '12px Inter, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('Input', 35, rect.height / 2 - 25);
+            ctx.fillText('Execute', 35, rect.height / 2 + 30);
+
+            const mapX = (time) => 50 + (time / totalDuration) * (rect.width - 90);
+
+            // Current Time Scrubber
+            const currentX = mapX(elapsed);
+            if (elapsed <= totalDuration) {
+                ctx.strokeStyle = '#3f3f46';
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(currentX, 10);
+                ctx.lineTo(currentX, rect.height - 10);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            // Draw Cooldown Bars
+            cooldowns.forEach(c => {
+                if (elapsed >= c.start) {
+                    const xStart = mapX(c.start);
+                    // Cap the visible width to either the elapsed time or the full cooldown
+                    const visibleTime = Math.min(elapsed, c.end);
+                    const width = mapX(visibleTime) - xStart;
+                    
+                    // Background placeholder for full cooldown
+                    ctx.fillStyle = 'rgba(16, 185, 129, 0.05)';
+                    ctx.fillRect(xStart, rect.height / 2 - 5, mapX(c.end) - xStart, 10);
+
+                    // Active cooldown progress
+                    ctx.fillStyle = (elapsed >= c.end) ? '#0f766e' : '#10b981'; // Teal when done, Emerald while active
+                    ctx.fillRect(xStart, rect.height / 2 - 5, width, 10);
+                }
+            });
+
+            // Draw Inputs
+            scenario.forEach(eventTime => {
+                if (elapsed >= eventTime) {
+                    const x = mapX(eventTime);
+                    const isTrigger = executions.includes(eventTime);
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, rect.height / 2 - 30, 5, 0, Math.PI * 2);
+                    // Brighter color if it triggered an execution, muted if ignored
+                    ctx.fillStyle = isTrigger ? '#e4e4e7' : '#52525b';
+                    ctx.fill();
+
+                    // If it's a trigger, draw the execution dot directly beneath it
+                    if (isTrigger) {
+                        ctx.beginPath();
+                        ctx.arc(x, rect.height / 2 + 30, 7, 0, Math.PI * 2);
+                        ctx.fillStyle = '#10b981';
+                        ctx.shadowColor = '#10b981';
+                        ctx.shadowBlur = 10;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+
+                        // Draw connection line straight down (Immediate Execution)
+                        ctx.strokeStyle = 'rgba(16, 185, 129, 0.5)';
+                        ctx.beginPath();
+                        ctx.moveTo(x, rect.height / 2 - 25);
+                        ctx.lineTo(x, rect.height / 2 + 25);
+                        ctx.stroke();
+                    }
+                }
+            });
+
+            // Analogy CSS Animation sync
+            if (elapsed < totalDuration) {
+                // Find currently active cooldown
+                const activeCooldown = cooldowns.find(c => elapsed >= c.start && elapsed < c.end);
+                
+                if (activeCooldown) {
+                    const pct = ((elapsed - activeCooldown.start) / throttleWait) * 100;
+                    machineBar.style.width = `${pct}%`;
+                    machineBar.style.backgroundColor = '#14b8a6'; // Teal
+                    machineStatus.innerText = "Machine brewing... (ignoring button)";
+                } else {
+                    machineBar.style.width = `100%`;
+                    machineBar.style.backgroundColor = '#10b981'; // Emerald
+                    machineStatus.innerText = "Ready for next order!";
+                }
+            } else {
+                 machineBar.style.width = `100%`;
+                 machineStatus.innerText = "Simulation complete.";
+            }
+
+            if (elapsed < totalDuration + 1000) {
+                animationFrameId = requestAnimationFrame(renderLoop);
+            } else {
+                ctx.fillStyle = '#71717a';
+                ctx.font = 'italic 12px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Animation Complete. Click restart to play again.', rect.width / 2, rect.height - 20);
+            }
+        }
+
+        renderLoop();
+
+        restartBtn.addEventListener('click', () => {
+            cancelAnimationFrame(animationFrameId);
+            startTime = Date.now();
+            machineBar.style.width = '0%';
+            renderLoop();
+        });
+
+    </script>
+</body>
+</html>

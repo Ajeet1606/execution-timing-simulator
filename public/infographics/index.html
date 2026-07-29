@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Execution Timing Patterns: Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #09090b;
+      color: #f4f4f5;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen p-8">
+
+  <div class="max-w-6xl mx-auto space-y-12">
+    <header class="text-center space-y-4 py-12">
+      <h1 class="text-5xl font-bold tracking-tight">Execution Timing Patterns</h1>
+      <p class="text-zinc-400 text-lg max-w-xl mx-auto">Mastering how to control function execution, manage resource
+        consumption, and build responsive applications.</p>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <!-- Pattern Cards -->
+      <a href="./debounce.html" class="glass-card rounded-2xl p-6 hover:border-blue-500 transition-all group">
+        <div class="text-4xl mb-4">🏢</div>
+        <h3 class="text-xl font-bold mb-2 text-blue-500">Debouncing</h3>
+        <p class="text-zinc-400 text-sm">Waiting for a period of silence before executing, perfect for search bars and
+          auto-saves.</p>
+      </a>
+      <a href="./throttle.html" class="glass-card rounded-2xl p-6 hover:border-emerald-500 transition-all group">
+        <div class="text-4xl mb-4">☕</div>
+        <h3 class="text-xl font-bold mb-2 text-emerald-500">Throttling</h3>
+        <p class="text-zinc-400 text-sm">Ensuring a function runs at a consistent, steady rate regardless of how fast
+          it's triggered.</p>
+      </a>
+      <a href="./rate-limit.html" class="glass-card rounded-2xl p-6 hover:border-amber-500 transition-all group">
+        <div class="text-4xl mb-4">🛑</div>
+        <h3 class="text-xl font-bold mb-2 text-amber-500">Rate Limiting</h3>
+        <p class="text-zinc-400 text-sm">Restricting operations to a strict quota to protect against abuse and system
+          overload.</p>
+      </a>
+
+
+
+      <a href="./queue.html" class="glass-card rounded-2xl p-6 hover:border-purple-500 transition-all group">
+        <div class="text-4xl mb-4">🛒</div>
+        <h3 class="text-xl font-bold mb-2 text-purple-400">Queueing</h3>
+        <p class="text-zinc-400 text-sm">Buffering events to ensure they are all processed sequentially without crashing
+          the system.</p>
+      </a>
+
+      <a href="./batch.html" class="glass-card rounded-2xl p-6 hover:border-blue-500 transition-all group">
+        <div class="text-4xl mb-4">📦</div>
+        <h3 class="text-xl font-bold mb-2 text-blue-400">Batching</h3>
+        <p class="text-zinc-400 text-sm">Grouping events to process them as one unit, increasing efficiency by reducing
+          overhead.</p>
+      </a>
+
+
+
+    </div>
+  </div>
+</body>
+
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Queueing Explained: An Interactive Infographic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b; /* Zinc 950 */
+            color: #f4f4f5; /* Zinc 50 */
+        }
+        
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #8b5cf6, #ec4899); /* Purple to Pink */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        /* Queue animation styling */
+        .queue-item {
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto space-y-12">
+        
+        <!-- HEADER -->
+        <header class="text-center space-y-4 py-12">
+            <h4 class="text-purple-500 font-bold tracking-widest uppercase text-sm">Execution Timing Patterns</h4>
+            <h1 class="text-5xl md:text-6xl font-bold tracking-tight">Understanding <span class="gradient-text">Queues</span></h1>
+            <p class="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                A programming pattern that guarantees every event is processed, but controls the rate of execution. Bursts of activity are lined up and processed sequentially, rather than being dropped or ignored.
+            </p>
+        </header>
+
+        <!-- THE VISUALIZER -->
+        <section class="glass-card rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 to-pink-500"></div>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold">The Queue Timeline</h2>
+                    <p class="text-zinc-400 text-sm mt-1">Watch how a sudden burst of <strong class="text-zinc-200">6 inputs</strong> is buffered and processed <strong class="text-purple-500">one by one</strong>.</p>
+                </div>
+                <button id="restart-btn" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-sm font-semibold transition-colors border border-zinc-700">
+                    Restart Animation
+                </button>
+            </div>
+
+            <div class="relative w-full h-64 bg-zinc-900/50 rounded-xl border border-zinc-800 p-4 flex flex-col justify-between">
+                <canvas id="timeline-canvas" class="w-full h-3/5 block"></canvas>
+                
+                <!-- Queue Visualizer embedded in canvas area -->
+                <div class="h-16 mt-4 bg-black/50 rounded-lg border border-zinc-700/50 flex items-center px-4 gap-2 overflow-hidden relative">
+                    <div class="text-xs text-zinc-500 uppercase tracking-widest absolute left-4 -top-2 bg-zinc-900 px-2 pt-2.5">Processing Queue</div>
+                    <div id="visual-queue" class="flex gap-2 items-center h-full w-full pt-2">
+                        <!-- Queue items injected via JS -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-6 flex flex-wrap items-center justify-center gap-6 text-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-slate-500"></div>
+                    <span class="text-zinc-400">Raw Input (Enqueued)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-purple-900/50 border border-purple-500"></div>
+                    <span class="text-zinc-400">Processing Time</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]"></div>
+                    <span class="text-zinc-200 font-semibold">Execution (Dequeued)</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ANALOGY & DEFINITION -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="glass-card rounded-2xl p-8">
+                <div class="w-12 h-12 bg-purple-500/10 rounded-xl flex items-center justify-center mb-6 border border-purple-500/20">
+                    <svg class="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3">How it Works</h3>
+                <p class="text-zinc-400 leading-relaxed">
+                    Unlike Rate Limiting or Throttling which <em>discard</em> excess events, a Queue <em>buffers</em> them. When events arrive faster than they can be processed, they are added to a line (First-In, First-Out). The system continuously works through the line, ensuring every single event is eventually handled.
+                </p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-8 border-t-4 border-t-pink-500">
+                <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
+                    <span>🛒</span> The Grocery Checkout Analogy
+                </h3>
+                <p class="text-zinc-400 leading-relaxed mb-6">
+                    A cashier takes 1 minute to scan a basket. If a bus arrives and 5 people rush the register at once, the cashier doesn't throw 4 people out of the store (Rate Limit). Instead, they form a line. It will take 5 minutes, but <strong>everyone gets served.</strong>
+                </p>
+                <div class="w-full bg-zinc-900 rounded-full h-2 mb-1 overflow-hidden relative">
+                    <div id="cashier-bar" class="bg-pink-500 h-2 rounded-full w-0"></div>
+                </div>
+                <p class="text-xs text-zinc-500 text-center uppercase tracking-widest mt-2" id="cashier-status">Register idle...</p>
+            </div>
+        </div>
+
+        <!-- REAL WORLD EXAMPLES -->
+        <section class="space-y-6">
+            <h2 class="text-2xl font-bold text-center">Real-World Use Cases</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6 hover:border-purple-500/50 transition-colors">
+                    <h4 class="text-lg font-bold text-zinc-200 mb-2">1. Email Delivery Systems</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-4">
+                        When a company sends a newsletter to 100,000 users, hitting "send" doesn't try to open 100k connections instantly. The emails are queued and sent in batches over several minutes to avoid spam filters.
+                    </p>
+                    <div class="px-3 py-2 bg-black rounded border border-zinc-800 code-font text-xs text-zinc-500 flex justify-between">
+                        <span>Guarantee:</span>
+                        <span class="text-purple-400 font-bold">100% Delivery Rate</span>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6 hover:border-purple-500/50 transition-colors">
+                    <h4 class="text-lg font-bold text-zinc-200 mb-2">2. Heavy Computation</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-4">
+                        If 10 users upload 4K videos for transcoding simultaneously, running them all at once would crash the server. A queue processes them one by one, keeping CPU usage stable.
+                    </p>
+                    <div class="px-3 py-2 bg-black rounded border border-zinc-800 code-font text-xs text-zinc-500 flex justify-between">
+                        <span>Resource:</span>
+                        <span class="text-purple-400 font-bold">CPU Protected</span>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6 hover:border-purple-500/50 transition-colors">
+                    <h4 class="text-lg font-bold text-zinc-200 mb-2">3. Ticket Booking (Waiting Rooms)</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-4">
+                        When concert tickets drop, millions try to buy them. Ticketmaster places users in a virtual queue, ensuring the database isn't overwhelmed while fairly serving users in the order they arrived.
+                    </p>
+                    <div class="px-3 py-2 bg-black rounded border border-zinc-800 code-font text-xs text-zinc-500 flex justify-between">
+                        <span>Fairness:</span>
+                        <span class="text-purple-400 font-bold">First Come, First Serve</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+        
+        <footer class="text-center py-8 text-zinc-500 text-sm">
+            <p>Execution Timing Patterns &bull; Headless Architecture Series</p>
+        </footer>
+    </div>
+
+    <!-- Animation Script for the Canvas Infographic -->
+    <script>
+        const canvas = document.getElementById('timeline-canvas');
+        const ctx = canvas.getContext('2d');
+        const restartBtn = document.getElementById('restart-btn');
+        const cashierBar = document.getElementById('cashier-bar');
+        const cashierStatus = document.getElementById('cashier-status');
+        const visualQueue = document.getElementById('visual-queue');
+
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            return rect;
+        }
+
+        let rect = resizeCanvas();
+        window.addEventListener('resize', () => { rect = resizeCanvas(); });
+
+        // Animation Configuration
+        const totalDuration = 10000; // 10 seconds to show the whole queue processing
+        const processingTime = 1000; // 1 second to process each event
+        
+        // Simulated scenario: A massive sudden burst of 6 events
+        const scenario = [
+            500, 600, 800, 950, 1100, 1300  // All arrive within 1 second
+        ];
+
+        let executions = [];
+        let processingWindows = [];
+        let nextAvailableTime = 0;
+
+        scenario.forEach(eventTime => {
+            // Processing can only start when the event arrives OR when the previous processing finishes
+            let startTime = Math.max(eventTime, nextAvailableTime);
+            let endTime = startTime + processingTime;
+            
+            executions.push(endTime); // Final execution dot happens when processing finishes
+            processingWindows.push({ start: startTime, end: endTime });
+            
+            nextAvailableTime = endTime;
+        });
+
+        let startTime = Date.now();
+        let animationFrameId;
+        
+        // Colors
+        const colFired = '#a855f7'; // Purple 500
+        const colGrid = '#27272a';
+        const colText = '#71717a';
+
+        function renderLoop() {
+            const now = Date.now();
+            const elapsed = now - startTime;
+
+            ctx.clearRect(0, 0, rect.width, rect.height);
+
+            // Draw Base Timeline Grid
+            ctx.strokeStyle = colGrid;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(40, rect.height / 2);
+            ctx.lineTo(rect.width - 40, rect.height / 2);
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = colText;
+            ctx.font = '12px Inter, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('Input', 35, rect.height / 2 - 25);
+            ctx.fillText('Execute', 35, rect.height / 2 + 30);
+
+            const mapX = (time) => 50 + (time / totalDuration) * (rect.width - 90);
+
+            // Current Time Scrubber
+            const currentX = mapX(elapsed);
+            if (elapsed <= totalDuration) {
+                ctx.strokeStyle = '#3f3f46';
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(currentX, 10);
+                ctx.lineTo(currentX, rect.height - 10);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            let currentQueueCount = 0;
+            let currentlyProcessing = false;
+            let activeWindowStart = 0;
+
+            // Draw Processing Blocks
+            processingWindows.forEach(p => {
+                if (elapsed >= p.start) {
+                    const xStart = mapX(p.start);
+                    const visibleTime = Math.min(elapsed, p.end);
+                    const width = mapX(visibleTime) - xStart;
+                    
+                    // Background placeholder for full processing time
+                    ctx.fillStyle = 'rgba(168, 85, 247, 0.05)';
+                    ctx.fillRect(xStart, rect.height / 2 - 5, mapX(p.end) - xStart, 10);
+
+                    // Active processing progress
+                    ctx.fillStyle = (elapsed >= p.end) ? '#581c87' : '#a855f7'; 
+                    ctx.fillRect(xStart, rect.height / 2 - 5, width, 10);
+                    
+                    if (elapsed < p.end) {
+                        currentlyProcessing = true;
+                        activeWindowStart = p.start;
+                    }
+                }
+            });
+
+            // Draw Inputs and Executions
+            scenario.forEach((eventTime, index) => {
+                const execTime = executions[index];
+                
+                // Check if this item is currently waiting in the queue
+                if (elapsed >= eventTime && elapsed < execTime) {
+                    currentQueueCount++;
+                }
+
+                if (elapsed >= eventTime) {
+                    const x = mapX(eventTime);
+                    
+                    // Input Dot
+                    ctx.beginPath();
+                    ctx.arc(x, rect.height / 2 - 30, 5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#e4e4e7';
+                    ctx.fill();
+
+                    // Execution Dot (only draw if time has passed the processing end time)
+                    if (elapsed >= execTime) {
+                        const execX = mapX(execTime);
+                        ctx.beginPath();
+                        ctx.arc(execX, rect.height / 2 + 30, 7, 0, Math.PI * 2);
+                        ctx.fillStyle = colFired;
+                        ctx.shadowColor = colFired;
+                        ctx.shadowBlur = 10;
+                        ctx.fill();
+                        ctx.shadowBlur = 0;
+
+                        // Connection line (curved to show delay)
+                        ctx.strokeStyle = 'rgba(168, 85, 247, 0.5)';
+                        ctx.beginPath();
+                        ctx.moveTo(x, rect.height / 2 - 25);
+                        // Control points for a smooth s-curve connecting input to delayed execution
+                        ctx.bezierCurveTo(
+                            x, rect.height / 2, 
+                            execX, rect.height / 2, 
+                            execX, rect.height / 2 + 25
+                        );
+                        ctx.stroke();
+                    } else if (elapsed >= processingWindows[index].start) {
+                         // Line connecting input to the start of its processing block
+                         const startX = mapX(processingWindows[index].start);
+                         ctx.strokeStyle = 'rgba(168, 85, 247, 0.2)';
+                         ctx.beginPath();
+                         ctx.moveTo(x, rect.height / 2 - 25);
+                         ctx.bezierCurveTo(
+                             x, rect.height / 2 - 10, 
+                             startX, rect.height / 2 - 10, 
+                             startX, rect.height / 2 - 5
+                         );
+                         ctx.stroke();
+                    }
+                }
+            });
+
+            // Update Queue UI
+            visualQueue.innerHTML = '';
+            for(let i=0; i < currentQueueCount; i++) {
+                const item = document.createElement('div');
+                item.className = 'w-6 h-6 rounded-md bg-purple-500/20 border border-purple-500 flex-shrink-0 animate-pulse';
+                if(i === 0 && currentlyProcessing) {
+                    item.className = 'w-6 h-6 rounded-md bg-purple-500 flex-shrink-0 shadow-[0_0_8px_#a855f7] flex items-center justify-center';
+                    item.innerHTML = '<span class="text-[10px] text-white">⚙️</span>';
+                }
+                visualQueue.appendChild(item);
+            }
+
+            // Analogy CSS Animation sync
+            if (elapsed < totalDuration) {
+                if (currentlyProcessing) {
+                    const pct = ((elapsed - activeWindowStart) / processingTime) * 100;
+                    cashierBar.style.width = `${pct}%`;
+                    cashierBar.style.backgroundColor = '#ec4899'; // Pink
+                    cashierStatus.innerText = `Scanning items... (${currentQueueCount - 1} people waiting)`;
+                } else {
+                    cashierBar.style.width = `0%`;
+                    cashierStatus.innerText = "Register idle, waiting for customers...";
+                }
+            } else {
+                 cashierBar.style.width = `100%`;
+                 cashierBar.style.backgroundColor = '#10b981'; // Green
+                 cashierStatus.innerText = "All customers served.";
+            }
+
+            // Loop or end
+            if (elapsed < totalDuration + 1000) {
+                animationFrameId = requestAnimationFrame(renderLoop);
+            } else {
+                ctx.fillStyle = colText;
+                ctx.font = 'italic 12px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Animation Complete. Click restart to play again.', rect.width / 2, rect.height / 2 + 50);
+            }
+        }
+
+        renderLoop();
+
+        restartBtn.addEventListener('click', () => {
+            cancelAnimationFrame(animationFrameId);
+            startTime = Date.now();
+            cashierBar.style.width = '0%';
+            renderLoop();
+        });
+
+    </script>
+</body>
+</html>

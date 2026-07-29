@@ -9,11 +9,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Play, Pause } from 'lucide-react';
 import { CanvasTimeline, TimelineEvent, PatternType } from './CanvasTimeline';
+import { DocsModal } from './DocsModal';
 
 export function ExecutionSimulator() {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [windowMs, setWindowMs] = useState(6000);
   const [isPaused, setIsPaused] = useState(false);
+  const [showDoc, setShowDoc] = useState(false);
 
   // Refs for tracking pause duration offsets
   const isPausedRef = useRef(isPaused);
@@ -93,7 +95,7 @@ export function ExecutionSimulator() {
 
   return (
     <div className="max-w-5xl mx-auto p-8 bg-zinc-950 text-white min-h-screen flex flex-col justify-between">
-      <div className="flex-grow">
+      <div className="grow">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Execution Timing Simulator</h1>
           <p className="text-zinc-400">
@@ -184,6 +186,14 @@ export function ExecutionSimulator() {
                   Adjust how much history is visible on screen.
                 </p>
               </div>
+
+              <Button 
+                onClick={() => setShowDoc(true)}
+                variant="link"
+                className="w-full cursor-pointer text-teal-500 pt-12 text-xl"
+              >
+                Read Docs
+              </Button>
             </div>
           </div>
 
@@ -212,9 +222,14 @@ export function ExecutionSimulator() {
           >
             tapaScript
           </a>
-          . Learn how senior devs think.
+          . Learn how Senior Devs think.
         </p>
       </footer>
+      {
+        showDoc && (
+          <DocsModal isOpen={showDoc} onClose={() => setShowDoc(false)} />
+        )
+      }
     </div>
   );
 }

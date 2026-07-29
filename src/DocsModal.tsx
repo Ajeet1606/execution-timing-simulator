@@ -99,7 +99,7 @@ export function DocsModal({ isOpen, onClose }: DocsModalProps) {
       <div className="relative z-10 w-full max-w-2xl max-h-[90vh] flex flex-col bg-zinc-950 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden">
 
         {/* ── Header ── */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 flex-shrink-0">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 shrink-0">
           <div>
             <h2 className="text-lg font-bold text-white">About This App</h2>
             <p className="text-xs text-zinc-500 mt-0.5">Understanding execution timing patterns</p>
@@ -137,8 +137,8 @@ export function DocsModal({ isOpen, onClose }: DocsModalProps) {
                 at any time to freeze the timeline and inspect exactly where each dot landed.
               </p>
               <div className="mt-3 p-3 bg-teal-950/40 border border-teal-900/50 rounded-lg text-teal-300 text-xs">
-                💡 <strong>Pro tip:</strong> Click rapidly 5–10 times in quick succession, then pause.
-                You'll see that debounce shows far fewer dots than raw clicks — that's the entire point.
+                💡 <strong>Pro tip:</strong> Click rapidly 5 to 10 times in quick succession, then pause.
+                You will see that debounce shows far fewer dots than raw clicks — that is the entire point.
               </div>
             </div>
           </section>
@@ -192,7 +192,7 @@ export function DocsModal({ isOpen, onClose }: DocsModalProps) {
               </p>
               <p className="text-zinc-500 italic">
                 Classic use case: scroll or resize handlers — you want smooth 60 fps-style feedback,
-                but don't need every single pixel event to trigger a re-render.
+                but do not need every single pixel event to trigger a re-render.
               </p>
               <div className="mt-3 space-y-1.5">
                 <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Parameters in this app</p>
@@ -223,7 +223,7 @@ export function DocsModal({ isOpen, onClose }: DocsModalProps) {
               <p>
                 A Queue <strong className="text-zinc-200">serialises work</strong>. Each call is held
                 in line and processed only after the previous one finishes. No calls are dropped —
-                they're simply delayed until capacity is available.
+                they are simply delayed until capacity is available.
               </p>
               <p className="text-zinc-500 italic">
                 Classic use case: sequential API mutations, file uploads that must not run in parallel,
@@ -261,7 +261,7 @@ export function DocsModal({ isOpen, onClose }: DocsModalProps) {
           <section>
             <h3 className="text-base font-bold text-white mb-1">Deep Dive — Video Explanation</h3>
             <p className="text-sm text-zinc-400 mb-4">
-              Watch this tutorial to understand all five patterns in depth with real-world code examples.
+              Watch this tutorial to understand all five patterns in depth with real-world examples.
             </p>
 
             {YOUTUBE_VIDEO_ID === 'YOUR_VIDEO_ID_HERE' ? (
@@ -292,7 +292,7 @@ export function DocsModal({ isOpen, onClose }: DocsModalProps) {
         </div>
 
         {/* ── Footer ── */}
-        <div className="px-6 py-3 border-t border-zinc-800 flex-shrink-0 flex items-center justify-between">
+        <div className="px-6 py-3 border-t border-zinc-800 shrink-0 flex items-center justify-between">
           <p className="text-xs text-zinc-600">
             Built by{' '}
             <a

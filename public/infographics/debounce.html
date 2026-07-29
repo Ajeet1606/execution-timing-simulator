@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debouncing Explained: An Interactive Infographic</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b; /* Zinc 950 */
+            color: #f4f4f5; /* Zinc 50 */
+        }
+        
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .gradient-text {
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Animation Keyframes for the Elevator */
+        @keyframes elevatorClose {
+            0% { width: 0%; opacity: 0; }
+            10% { width: 10%; opacity: 1; }
+            90% { width: 90%; opacity: 1; }
+            100% { width: 100%; opacity: 0; }
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+
+    <div class="max-w-5xl mx-auto space-y-12">
+        
+        <!-- HEADER -->
+        <header class="text-center space-y-4 py-12">
+            <h4 class="text-blue-500 font-bold tracking-widest uppercase text-sm">Execution Timing Patterns</h4>
+            <h1 class="text-5xl md:text-6xl font-bold tracking-tight">Understanding <span class="gradient-text">Debouncing</span></h1>
+            <p class="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+                A programming technique that enforces a period of "silence" before executing a function. It waits for rapid events to stop before taking action.
+            </p>
+        </header>
+
+        <!-- THE VISUALIZER -->
+        <section class="glass-card rounded-2xl p-8 shadow-2xl relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+            
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold">The Debounce Timeline</h2>
+                    <p class="text-zinc-400 text-sm mt-1">Watch how the timer resets on every keystroke, only firing when the typing stops.</p>
+                </div>
+                <button id="restart-btn" class="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg text-sm font-semibold transition-colors border border-zinc-700">
+                    Restart Animation
+                </button>
+            </div>
+
+            <div class="relative w-full h-64 bg-zinc-900/50 rounded-xl border border-zinc-800 p-4">
+                <canvas id="timeline-canvas" class="w-full h-full block"></canvas>
+            </div>
+            
+            <div class="mt-6 flex items-center justify-center gap-8 text-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-slate-500"></div>
+                    <span class="text-zinc-400">Raw Input (Keystroke)</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 bg-blue-900/50 border border-blue-500"></div>
+                    <span class="text-zinc-400">Wait Timer</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="w-3 h-3 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]"></div>
+                    <span class="text-zinc-200 font-semibold">Final Execution</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ANALOGY & DEFINITION -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="glass-card rounded-2xl p-8">
+                <div class="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center mb-6 border border-blue-500/20">
+                    <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold mb-3">How it Works</h3>
+                <p class="text-zinc-400 leading-relaxed">
+                    When an event is triggered, a timer starts. If the event is triggered <em>again</em> before the timer expires, the original timer is destroyed and a brand new one begins. The function only executes once the timer reaches zero without being interrupted.
+                </p>
+            </div>
+
+            <div class="glass-card rounded-2xl p-8 border-t-4 border-t-purple-500">
+                <h3 class="text-xl font-bold mb-3 flex items-center gap-2">
+                    <span>🏢</span> The Elevator Analogy
+                </h3>
+                <p class="text-zinc-400 leading-relaxed mb-6">
+                    Imagine elevator doors closing. If a person walks through, the doors stop and the "closing timer" resets. It doesn't matter if 1 person or 50 people walk through—the elevator won't actually move until <strong>everyone stops boarding for 3 seconds</strong>.
+                </p>
+                <div class="w-full bg-zinc-900 rounded-full h-2 mb-1 overflow-hidden relative">
+                    <div id="elevator-bar" class="bg-purple-500 h-2 rounded-full w-0"></div>
+                </div>
+                <p class="text-xs text-zinc-500 text-center uppercase tracking-widest mt-2" id="elevator-status">Waiting for silence...</p>
+            </div>
+        </div>
+
+        <!-- REAL WORLD EXAMPLES -->
+        <section class="space-y-6">
+            <h2 class="text-2xl font-bold text-center">Real-World Use Cases</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6 hover:border-blue-500/50 transition-colors">
+                    <h4 class="text-lg font-bold text-zinc-200 mb-2">1. Search Bar Auto-Complete</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-4">
+                        If a user types "S-M-A-R-T", you don't want to make 5 separate database queries. Debouncing waits until they pause typing for 300ms, then sends one single request for "SMART".
+                    </p>
+                    <div class="px-3 py-2 bg-black rounded border border-zinc-800 code-font text-xs text-zinc-500 flex justify-between">
+                        <span>API Requests:</span>
+                        <span class="text-blue-400 font-bold">1 instead of 5</span>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6 hover:border-blue-500/50 transition-colors">
+                    <h4 class="text-lg font-bold text-zinc-200 mb-2">2. Window Resizing</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-4">
+                        Dragging a browser window fires the 'resize' event dozens of times per second. Recalculating complex chart layouts on every pixel change will freeze the browser. 
+                    </p>
+                    <div class="px-3 py-2 bg-black rounded border border-zinc-800 code-font text-xs text-zinc-500 flex justify-between">
+                        <span>Layout Recalculations:</span>
+                        <span class="text-blue-400 font-bold">1 instead of 100+</span>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-6 hover:border-blue-500/50 transition-colors">
+                    <h4 class="text-lg font-bold text-zinc-200 mb-2">3. Auto-Saving</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed mb-4">
+                        In apps like Google Docs or Notion, progress saves automatically. Instead of writing to the server on every keystroke, a debounced function saves the document only when you stop typing.
+                    </p>
+                    <div class="px-3 py-2 bg-black rounded border border-zinc-800 code-font text-xs text-zinc-500 flex justify-between">
+                        <span>Database Writes:</span>
+                        <span class="text-blue-400 font-bold">Optimized for Batches</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+        
+        <footer class="text-center py-8 text-zinc-500 text-sm">
+            <p>Execution Timing Patterns &bull; Headless Architecture Series</p>
+        </footer>
+    </div>
+
+    <!-- Animation Script for the Canvas Infographic -->
+    <script>
+        const canvas = document.getElementById('timeline-canvas');
+        const ctx = canvas.getContext('2d');
+        const restartBtn = document.getElementById('restart-btn');
+        const elevatorBar = document.getElementById('elevator-bar');
+        const elevatorStatus = document.getElementById('elevator-status');
+
+        // Handle High DPI displays
+        function resizeCanvas() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            ctx.scale(dpr, dpr);
+            return rect;
+        }
+
+        let rect = resizeCanvas();
+        window.addEventListener('resize', () => { rect = resizeCanvas(); });
+
+        // Animation Configuration
+        const totalDuration = 8000; // 8 seconds of timeline
+        const debounceWait = 1000; // 1 second wait
+        
+        // Simulated user typing scenario: bursts of keystrokes with pauses
+        const scenario = [
+            500, 700, 900,  // Types "App" rapidly, then pauses
+            2200, 2400,     // Types "le", then long pause
+            4500, 4700, 4800, 5000 // Types " pie" and stops
+        ];
+
+        let startTime = Date.now();
+        let animationFrameId;
+
+        function renderLoop() {
+            const now = Date.now();
+            const elapsed = now - startTime;
+
+            ctx.clearRect(0, 0, rect.width, rect.height);
+
+            // Draw Base Timeline Grid
+            ctx.strokeStyle = '#27272a';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(40, rect.height / 2);
+            ctx.lineTo(rect.width - 40, rect.height / 2);
+            ctx.stroke();
+
+            // Labels
+            ctx.fillStyle = '#71717a';
+            ctx.font = '12px Inter, sans-serif';
+            ctx.textAlign = 'right';
+            ctx.fillText('Input', 35, rect.height / 2 - 25);
+            ctx.fillText('Execute', 35, rect.height / 2 + 30);
+
+            // Time progress mapping
+            const mapX = (time) => 50 + (time / totalDuration) * (rect.width - 90);
+
+            // Current Time Scrubber
+            const currentX = mapX(elapsed);
+            if (elapsed <= totalDuration) {
+                ctx.strokeStyle = '#3f3f46';
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(currentX, 10);
+                ctx.lineTo(currentX, rect.height - 10);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            let lastInputTime = -1;
+            let executionFiredForLastBurst = false;
+
+            // Draw Inputs and Timers
+            scenario.forEach((eventTime, index) => {
+                const isPast = elapsed >= eventTime;
+                
+                // Draw raw input dot
+                ctx.beginPath();
+                const x = mapX(eventTime);
+                ctx.arc(x, rect.height / 2 - 30, 5, 0, Math.PI * 2);
+                ctx.fillStyle = isPast ? '#64748b' : '#27272a';
+                ctx.fill();
+
+                if (isPast) {
+                    lastInputTime = eventTime;
+                    
+                    // Determine if this is the last event in a burst
+                    const nextEvent = scenario[index + 1];
+                    const isEndOfBurst = !nextEvent || (nextEvent - eventTime > debounceWait);
+                    
+                    // Draw the Wait Timer Bar trailing the event
+                    if (elapsed >= eventTime) {
+                        const timeSinceEvent = elapsed - eventTime;
+                        
+                        // If a new event interrupted this one, we only draw the timer up to the next event
+                        const maxTimerVisible = nextEvent ? Math.min(timeSinceEvent, nextEvent - eventTime) : timeSinceEvent;
+                        const cappedTimer = Math.min(maxTimerVisible, debounceWait);
+                        
+                        const barWidth = mapX(cappedTimer) - mapX(0); // Calculate width in pixels
+                        
+                        // Draw timer background
+                        ctx.fillStyle = 'rgba(59, 130, 246, 0.1)';
+                        ctx.fillRect(x, rect.height / 2 - 5, barWidth, 10);
+                        
+                        // Draw timer progress line
+                        ctx.fillStyle = (cappedTimer === debounceWait && isEndOfBurst) ? '#3b82f6' : '#64748b';
+                        ctx.fillRect(x, rect.height / 2 - 5, barWidth, 10);
+
+                        // Draw Execution Dot if timer completed
+                        if (isEndOfBurst && timeSinceEvent >= debounceWait) {
+                            const execX = mapX(eventTime + debounceWait);
+                            
+                            // Only draw if the scrubber has passed it
+                            if (elapsed >= eventTime + debounceWait) {
+                                ctx.beginPath();
+                                ctx.arc(execX, rect.height / 2 + 30, 7, 0, Math.PI * 2);
+                                ctx.fillStyle = '#3b82f6';
+                                ctx.shadowColor = '#3b82f6';
+                                ctx.shadowBlur = 10;
+                                ctx.fill();
+                                ctx.shadowBlur = 0;
+                                
+                                // Draw connection line
+                                ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
+                                ctx.beginPath();
+                                ctx.moveTo(execX, rect.height / 2);
+                                ctx.lineTo(execX, rect.height / 2 + 25);
+                                ctx.stroke();
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Elevator CSS Animation logic sync
+            if (elapsed < totalDuration) {
+                if (lastInputTime > 0) {
+                    const timeSinceInput = elapsed - lastInputTime;
+                    if (timeSinceInput < debounceWait) {
+                        // Timer is running
+                        const pct = (timeSinceInput / debounceWait) * 100;
+                        elevatorBar.style.width = `${pct}%`;
+                        elevatorBar.style.backgroundColor = '#8b5cf6'; // Purple
+                        elevatorStatus.innerText = "Timer resetting... doors open!";
+                    } else if (timeSinceInput >= debounceWait && timeSinceInput < debounceWait + 500) {
+                        // Just executed
+                        elevatorBar.style.width = `100%`;
+                        elevatorBar.style.backgroundColor = '#10b981'; // Green
+                        elevatorStatus.innerText = "Doors closed! Execution complete.";
+                    }
+                }
+            } else {
+                 elevatorBar.style.width = `0%`;
+                 elevatorStatus.innerText = "Waiting for events...";
+            }
+
+            // Loop or end
+            if (elapsed < totalDuration + 1000) {
+                animationFrameId = requestAnimationFrame(renderLoop);
+            } else {
+                ctx.fillStyle = '#71717a';
+                ctx.font = 'italic 12px Inter, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Animation Complete. Click restart to play again.', rect.width / 2, rect.height - 20);
+            }
+        }
+
+        // Start animation
+        renderLoop();
+
+        // Handle Restart
+        restartBtn.addEventListener('click', () => {
+            cancelAnimationFrame(animationFrameId);
+            startTime = Date.now();
+            elevatorBar.style.width = '0%';
+            renderLoop();
+        });
+
+    </script>
+</body>
+</html>
