@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { 
   useDebouncedCallback, 
   useThrottledCallback, 
@@ -7,19 +7,43 @@ import {
   useBatcher 
 } from '@tanstack/react-pacer';
 import { Button } from '@/components/ui/button';
+import { Play, Pause } from 'lucide-react';
 import { CanvasTimeline, TimelineEvent, PatternType } from './CanvasTimeline';
 
 export function ExecutionSimulator() {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [windowMs, setWindowMs] = useState(6000);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Refs for tracking pause duration offsets
+  const isPausedRef = useRef(isPaused);
+  isPausedRef.current = isPaused;
+  const pausedTimeRef = useRef<number | null>(null);
+  const totalPausedDurationRef = useRef<number>(0);
+
+  // Calculate virtual time that remains static when paused
+  const getVirtualNow = useCallback(() => {
+    if (isPausedRef.current) {
+      if (pausedTimeRef.current === null) {
+        pausedTimeRef.current = Date.now();
+      }
+      return pausedTimeRef.current - totalPausedDurationRef.current;
+    } else {
+      if (pausedTimeRef.current !== null) {
+        totalPausedDurationRef.current += Date.now() - pausedTimeRef.current;
+        pausedTimeRef.current = null;
+      }
+      return Date.now() - totalPausedDurationRef.current;
+    }
+  }, []);
 
   // Helper to push new dots to our visualizer
   const logEvent = useCallback((pattern: PatternType) => {
     setEvents((prev) => [
       ...prev, 
-      { id: Math.random().toString(36).substring(2, 9), timestamp: Date.now(), pattern }
+      { id: Math.random().toString(36).substring(2, 9), timestamp: getVirtualNow(), pattern }
     ]);
-  }, []);
+  }, [getVirtualNow]);
 
   // 1. Debounce
   const handleDebounce = useDebouncedCallback(
@@ -99,6 +123,41 @@ export function ExecutionSimulator() {
               >
                 Trigger Event
               </Button>
+
+              <Button 
+                onClick={() => {
+                  setIsPaused((prev) => {
+                    const next = !prev;
+                    isPausedRef.current = next;
+                    if (next) {
+                      pausedTimeRef.current = Date.now();
+                    } else {
+                      if (pausedTimeRef.current !== null) {
+                        totalPausedDurationRef.current += Date.now() - pausedTimeRef.current;
+                        pausedTimeRef.current = null;
+                      }
+                    }
+                    return next;
+                  });
+                }}
+                className={`w-full h-12 text-sm font-semibold transition-all mb-4 gap-2 flex items-center justify-center ${
+                  isPaused 
+                    ? "bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/20 shadow-xl border border-transparent" 
+                    : "border border-zinc-700 hover:bg-zinc-800 text-white bg-transparent"
+                }`}
+              >
+                {isPaused ? (
+                  <>
+                    <Play className="h-4 w-4 fill-current" />
+                    Resume Simulation
+                  </>
+                ) : (
+                  <>
+                    <Pause className="h-4 w-4 fill-current" />
+                    Pause Simulation
+                  </>
+                )}
+              </Button>
               
               <Button 
                 onClick={() => setEvents([])}
@@ -136,7 +195,13 @@ export function ExecutionSimulator() {
 
           {/* Timeline Visualization Panel */}
           <div className="md:col-span-3">
-            <CanvasTimeline events={events} windowMs={windowMs} />
+            <CanvasTimeline 
+              events={events} 
+              windowMs={windowMs} 
+              isPaused={isPaused}
+              pausedTimeRef={pausedTimeRef}
+              totalPausedDurationRef={totalPausedDurationRef}
+            />
           </div>
         </div>
       </div>

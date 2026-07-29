@@ -11,6 +11,9 @@ export interface TimelineEvent {
 interface CanvasTimelineProps {
   events: TimelineEvent[];
   windowMs?: number; 
+  isPaused: boolean;
+  pausedTimeRef: React.MutableRefObject<number | null>;
+  totalPausedDurationRef: React.MutableRefObject<number>;
 }
 
 const LANES: { id: PatternType; label: string; color: string }[] = [
@@ -22,12 +25,22 @@ const LANES: { id: PatternType; label: string; color: string }[] = [
   { id: 'batch', label: 'Batch', color: '#8b5cf6' },          // violet-500
 ];
 
-export function CanvasTimeline({ events, windowMs = 6000 }: CanvasTimelineProps) {
+export function CanvasTimeline({ 
+  events, 
+  windowMs = 6000,
+  isPaused,
+  pausedTimeRef,
+  totalPausedDurationRef
+}: CanvasTimelineProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // Keep events in a ref so the render loop always has fresh data without restarting
   const eventsRef = useRef(events);
   eventsRef.current = events;
+
+  // Use a ref for isPaused to prevent closures from capturing stale values in the loop
+  const isPausedRef = useRef(isPaused);
+  isPausedRef.current = isPaused;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -47,7 +60,19 @@ export function CanvasTimeline({ events, windowMs = 6000 }: CanvasTimelineProps)
     const laneHeight = rect.height / LANES.length;
 
     const renderLoop = () => {
-      const now = Date.now();
+      let now: number;
+      if (isPausedRef.current) {
+        if (pausedTimeRef.current === null) {
+          pausedTimeRef.current = Date.now();
+        }
+        now = pausedTimeRef.current - totalPausedDurationRef.current;
+      } else {
+        if (pausedTimeRef.current !== null) {
+          totalPausedDurationRef.current += Date.now() - pausedTimeRef.current;
+          pausedTimeRef.current = null;
+        }
+        now = Date.now() - totalPausedDurationRef.current;
+      }
       
       // CRITICAL: Wipe canvas clean every single frame to prevent text ghosting/smearing
       ctx.clearRect(0, 0, rect.width, rect.height);
@@ -122,7 +147,7 @@ export function CanvasTimeline({ events, windowMs = 6000 }: CanvasTimelineProps)
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [windowMs]); // Re-bind only if time window changes
+  }, [windowMs, pausedTimeRef, totalPausedDurationRef]); // Re-bind only if time window changes
 
   return (
     <div className="w-full h-105 bg-zinc-950 border border-zinc-800 rounded-xl overflow-hidden shadow-2xl">
