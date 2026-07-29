@@ -111,7 +111,7 @@ export function ExecutionSimulator() {
               
               <Button 
                 onClick={triggerAll}
-                className="w-full h-16 text-lg font-bold bg-teal-600 hover:bg-teal-500 active:scale-95 transition-all shadow-teal-900/20 shadow-xl mb-4"
+                className="cursor-pointer w-full h-16 text-lg font-bold bg-teal-600 hover:bg-teal-500 active:scale-95 transition-all shadow-teal-900/20 shadow-xl mb-4"
               >
                 Trigger Event
               </Button>
@@ -134,7 +134,7 @@ export function ExecutionSimulator() {
                     return next;
                   });
                 }}
-                className={`w-full h-12 text-sm font-semibold transition-all mb-4 gap-2 flex items-center justify-center ${
+                className={`w-full h-12 text-sm font-semibold transition-all mb-4 gap-2 flex items-center justify-center cursor-pointer ${
                   isPaused 
                     ? "bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/20 shadow-xl border border-transparent" 
                     : "border border-zinc-700 hover:bg-zinc-800 text-white bg-transparent"
@@ -156,7 +156,7 @@ export function ExecutionSimulator() {
               <Button 
                 onClick={() => setEvents([])}
                 variant="outline"
-                className="w-full border-zinc-700 hover:bg-zinc-800 text-zinc-900"
+                className="w-full border-zinc-700 hover:bg-zinc-300 text-zinc-900 cursor-pointer"
               >
                 Clear Timeline
               </Button>
