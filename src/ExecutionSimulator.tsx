@@ -76,68 +76,86 @@ export function ExecutionSimulator() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto p-8 bg-zinc-950 text-white min-h-screen">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Execution Timing Simulator</h1>
-        <p className="text-zinc-400">
-          Click rapidly to see how different architectural patterns handle high-frequency events.
-        </p>
-      </div>
+    <div className="max-w-5xl mx-auto p-8 bg-zinc-950 text-white min-h-screen flex flex-col justify-between">
+      <div className="flex-grow">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Execution Timing Simulator</h1>
+          <p className="text-zinc-400">
+            Click rapidly to see how different architectural patterns handle high-frequency events.
+          </p>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Controls Panel */}
-        <div className="md:col-span-1 space-y-4">
-          <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl shadow-lg">
-            <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-4">
-              Controls
-            </h2>
-            
-            <Button 
-              onClick={triggerAll}
-              className="w-full h-16 text-lg font-bold bg-blue-600 hover:bg-blue-500 active:scale-95 transition-all shadow-blue-900/20 shadow-xl mb-4"
-            >
-              Trigger Event
-            </Button>
-            
-            <Button 
-              onClick={() => setEvents([])}
-              variant="outline"
-              className="w-full border-zinc-700 hover:bg-zinc-800 text-zinc-900"
-            >
-              Clear Timeline
-            </Button>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Controls Panel */}
+          <div className="md:col-span-1 space-y-4">
+            <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl shadow-lg">
+              <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-4">
+                Controls
+              </h2>
+              
+              <Button 
+                onClick={triggerAll}
+                className="w-full h-16 text-lg font-bold bg-teal-600 hover:bg-teal-500 active:scale-95 transition-all shadow-teal-900/20 shadow-xl mb-4"
+              >
+                Trigger Event
+              </Button>
+              
+              <Button 
+                onClick={() => setEvents([])}
+                variant="outline"
+                className="w-full border-zinc-700 hover:bg-zinc-800 text-zinc-900"
+              >
+                Clear Timeline
+              </Button>
 
-            {/* Time Window Slider */}
-            <div className="mt-8">
-              <div className="flex justify-between items-center mb-2">
-                <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                  Timeline Speed
-                </label>
-                <span className="text-xs font-mono text-zinc-300 bg-zinc-800 px-2 py-1 rounded">
-                  {windowMs / 1000}s
-                </span>
+              {/* Time Window Slider */}
+              <div className="mt-8">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                    Timeline Speed
+                  </label>
+                  <span className="text-xs font-mono text-zinc-300 bg-zinc-800 px-2 py-1 rounded">
+                    {windowMs / 1000}s
+                  </span>
+                </div>
+                <input 
+                  type="range" 
+                  min="2000" 
+                  max="15000" 
+                  step="1000"
+                  value={windowMs} 
+                  onChange={(e) => setWindowMs(Number(e.target.value))}
+                  className="w-full accent-teal-500 cursor-pointer"
+                />
+                <p className="text-[10px] text-zinc-500 mt-2">
+                  Adjust how much history is visible on screen.
+                </p>
               </div>
-              <input 
-                type="range" 
-                min="2000" 
-                max="15000" 
-                step="1000"
-                value={windowMs} 
-                onChange={(e) => setWindowMs(Number(e.target.value))}
-                className="w-full accent-blue-500"
-              />
-              <p className="text-[10px] text-zinc-500 mt-2">
-                Adjust how much history is visible on screen.
-              </p>
             </div>
           </div>
-        </div>
 
-        {/* Timeline Visualization Panel */}
-        <div className="md:col-span-3">
-          <CanvasTimeline events={events} windowMs={windowMs} />
+          {/* Timeline Visualization Panel */}
+          <div className="md:col-span-3">
+            <CanvasTimeline events={events} windowMs={windowMs} />
+          </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="mt-12 pt-6 border-t border-zinc-800 text-center text-sm text-zinc-500">
+        <p>
+          Made with love by{' '}
+          <a
+            href="https://youtube.com/@tapasadhikary"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-teal-400 hover:text-teal-300 transition-colors font-medium underline underline-offset-4"
+          >
+            tapaScript
+          </a>
+          . Learn how senior devs think.
+        </p>
+      </footer>
     </div>
   );
 }
