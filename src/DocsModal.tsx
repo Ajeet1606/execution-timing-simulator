@@ -62,7 +62,6 @@ const Param = ({ label, value, note }: { label: string; value: string; note: str
 );
 
 // ─── YOUTUBE PLACEHOLDER — replace VIDEO_ID when ready ───────────────────────
-const YOUTUBE_VIDEO_ID = 'YOUR_VIDEO_ID_HERE';
 
 export function DocsModal({ isOpen, onClose }: DocsModalProps) {
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -264,29 +263,17 @@ export function DocsModal({ isOpen, onClose }: DocsModalProps) {
               Watch this tutorial to understand all five patterns in depth with real-world examples.
             </p>
 
-            {YOUTUBE_VIDEO_ID === 'YOUR_VIDEO_ID_HERE' ? (
-              /* Placeholder shown until a real video ID is provided */
-              <div className="w-full aspect-video rounded-xl bg-zinc-900 border border-zinc-800 border-dashed flex flex-col items-center justify-center gap-3 text-zinc-600">
-                <svg className="w-12 h-12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M23.5 6.2a3.01 3.01 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3.01 3.01 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3.01 3.01 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3.01 3.01 0 0 0 2.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/>
-                </svg>
-                <p className="text-sm font-medium text-zinc-500">YouTube video coming soon</p>
-                <p className="text-xs text-zinc-700">
-                  Replace <code className="text-zinc-500">YOUR_VIDEO_ID_HERE</code> in{' '}
-                  <code className="text-zinc-500">DocsModal.tsx</code>
-                </p>
-              </div>
-            ) : (
+            {
               <div className="w-full aspect-video rounded-xl overflow-hidden border border-zinc-800 shadow-xl">
                 <iframe
                   className="w-full h-full"
-                  src={`https://www.youtube.com/embed/${YOUTUBE_VIDEO_ID}?rel=0&modestbranding=1`}
+                  src={`https://www.youtube.com/embed/P83xAK8apLU?rel=0&modestbranding=1`}
                   title="Execution Timing Patterns — Deep Dive"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                 />
               </div>
-            )}
+            }
           </section>
 
         </div>

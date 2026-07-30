@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>10X Faster Performance Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #09090b; color: #f4f4f5; }
+        .performance-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .text-neon-green { color: #a3e635; }
+        .bg-neon-green { background-color: #a3e635; }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-5xl mx-auto space-y-12">
+        <header class="flex items-center justify-between border-b border-zinc-800 pb-8">
+            <div>
+                <h1 class="text-4xl font-bold tracking-tight">Performance <span class="text-neon-green">Optimization</span></h1>
+                <p class="text-zinc-400 mt-2">Achieving 10x faster load times for modern React apps.</p>
+            </div>
+            <div class="px-4 py-2 bg-zinc-900 rounded-full border border-zinc-700 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-neon-green animate-pulse"></span>
+                <span class="text-xs font-mono font-bold uppercase tracking-wider text-neon-green">Active Optimization</span>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Slow State -->
+            <div class="performance-card rounded-2xl p-6 relative overflow-hidden">
+                <div class="absolute inset-0 bg-red-950/10"></div>
+                <h3 class="text-lg font-semibold text-red-400 mb-4 flex items-center gap-2">
+                    <span class="text-xl">🐌</span> Before Optimization
+                </h3>
+                <div class="space-y-4">
+                    <div class="text-5xl font-bold font-mono">5.80s</div>
+                    <p class="text-zinc-500 text-sm">Still loading... high main thread blockage detected.</p>
+                    <div class="w-full bg-zinc-800 rounded-full h-2">
+                        <div class="bg-red-500 h-2 rounded-full w-full animate-pulse"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fast State -->
+            <div class="performance-card rounded-2xl p-6 relative overflow-hidden border-neon-green/20">
+                <div class="absolute inset-0 bg-neon-green/5"></div>
+                <h3 class="text-lg font-semibold text-neon-green mb-4 flex items-center gap-2">
+                    <span class="text-xl">🚀</span> After Optimization
+                </h3>
+                <div class="space-y-4">
+                    <div class="text-5xl font-bold font-mono text-neon-green">0.2s</div>
+                    <p class="text-zinc-300 text-sm">Loaded efficiently. Core web vitals metrics passed.</p>
+                    <div class="w-full bg-zinc-800 rounded-full h-2">
+                        <div class="bg-neon-green h-2 rounded-full w-[3%]"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section class="performance-card rounded-2xl p-8">
+            <h2 class="text-2xl font-bold mb-6">Optimization Techniques Used</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="p-4 bg-zinc-900 rounded-xl">
+                    <h4 class="font-bold mb-2">Code Splitting</h4>
+                    <p class="text-xs text-zinc-400">Reducing bundle size by dynamically importing components only when needed.</p>
+                </div>
+                <div class="p-4 bg-zinc-900 rounded-xl">
+                    <h4 class="font-bold mb-2">Memoization</h4>
+                    <p class="text-xs text-zinc-400">Preventing unnecessary re-renders using React.memo and useMemo hooks.</p>
+                </div>
+                <div class="p-4 bg-zinc-900 rounded-xl">
+                    <h4 class="font-bold mb-2">Image Optimization</h4>
+                    <p class="text-xs text-zinc-400">Serving next-gen formats and implementing lazy loading patterns.</p>
+                </div>
+            </div>
+        </section>
+    </div>
+</body>
+</html>
