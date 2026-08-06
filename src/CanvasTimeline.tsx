@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
 export type PatternType = 'raw' | 'debounce' | 'throttle' | 'rateLimit' | 'queue' | 'batch';
 
@@ -6,6 +6,7 @@ export interface TimelineEvent {
   id: string;
   timestamp: number;
   pattern: PatternType;
+  triggerTimestamp?: number;
 }
 
 interface CanvasTimelineProps {
@@ -14,6 +15,14 @@ interface CanvasTimelineProps {
   isPaused: boolean;
   pausedTimeRef: React.MutableRefObject<number | null>;
   totalPausedDurationRef: React.MutableRefObject<number>;
+}
+
+export interface HoveredDotInfo {
+  event: TimelineEvent;
+  cssX: number;
+  cssY: number;
+  laneLabel: string;
+  laneColor: string;
 }
 
 const LANES: { id: PatternType; label: string; color: string }[] = [
@@ -25,6 +34,23 @@ const LANES: { id: PatternType; label: string; color: string }[] = [
   { id: 'batch', label: 'Batch', color: '#8b5cf6' },          // violet-500
 ];
 
+function getPatternNote(pattern: PatternType): string {
+  switch (pattern) {
+    case 'raw':
+      return 'Instant user click event. Serves as baseline for latency comparison.';
+    case 'debounce':
+      return 'Execution delayed until 500ms of quiet time passed after event burst.';
+    case 'throttle':
+      return 'Execution constrained to at most once per 500ms time window.';
+    case 'rateLimit':
+      return 'Execution checked against rate budget (max 3 calls per 2000ms window).';
+    case 'queue':
+      return 'Queued and executed sequentially with concurrency: 1 (400ms job time).';
+    case 'batch':
+      return 'Batched into grouped execution (maxSize: 5 items or 1000ms wait).';
+  }
+}
+
 export function CanvasTimeline({ 
   events, 
   windowMs = 6000,
@@ -33,7 +59,10 @@ export function CanvasTimeline({
   totalPausedDurationRef
 }: CanvasTimelineProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   
+  const [hoveredDot, setHoveredDot] = useState<HoveredDotInfo | null>(null);
+
   // Keep events in a ref so the render loop always has fresh data without restarting
   const eventsRef = useRef(events);
   eventsRef.current = events;
@@ -41,6 +70,16 @@ export function CanvasTimeline({
   // Use a ref for isPaused to prevent closures from capturing stale values in the loop
   const isPausedRef = useRef(isPaused);
   isPausedRef.current = isPaused;
+
+  const hoveredDotRef = useRef(hoveredDot);
+  hoveredDotRef.current = hoveredDot;
+
+  // Clear hover state when unpausing
+  useEffect(() => {
+    if (!isPaused) {
+      setHoveredDot(null);
+    }
+  }, [isPaused]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -117,13 +156,29 @@ export function CanvasTimeline({
         const lane = LANES[laneIndex];
         const y = laneIndex * laneHeight + (laneHeight / 2);
 
+        const isHovered = isPausedRef.current && hoveredDotRef.current?.event.id === event.id;
+
+        // Draw outer highlight pulse ring if hovered in paused mode
+        if (isHovered) {
+          ctx.beginPath();
+          ctx.arc(x, y, 12, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(x, y, 10, 0, Math.PI * 2);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+
         // Draw the glowing dot
         ctx.beginPath();
-        ctx.arc(x, y, 6, 0, Math.PI * 2);
+        ctx.arc(x, y, isHovered ? 7 : 6, 0, Math.PI * 2);
         ctx.fillStyle = lane.color;
         
         ctx.shadowColor = lane.color;
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = isHovered ? 14 : 8;
         ctx.fill();
         ctx.shadowBlur = 0; // Reset shadow
       });
@@ -138,10 +193,78 @@ export function CanvasTimeline({
     return () => {
       cancelAnimationFrame(animationFrameId);
     };
-  }, [windowMs, pausedTimeRef, totalPausedDurationRef]); // Re-bind only if time window changes
+  }, [windowMs, pausedTimeRef, totalPausedDurationRef]);
+
+  // Unified pointer check helper for mouse and touch events
+  const handlePointerCheck = useCallback((clientX: number, clientY: number) => {
+    if (!isPaused) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = clientX - rect.left;
+    const mouseY = clientY - rect.top;
+
+    const now = (pausedTimeRef.current ?? Date.now()) - totalPausedDurationRef.current;
+    const presentX = rect.width - 30;
+    const laneHeight = rect.height / LANES.length;
+
+    let closest: HoveredDotInfo | null = null;
+    let minDistance = 18; // 18px hit radius for easy mouse & mobile touch interaction
+
+    eventsRef.current.forEach((event) => {
+      const age = now - event.timestamp;
+      if (age < 0 || age > windowMs) return;
+
+      const progress = age / windowMs;
+      const dotX = presentX - (progress * (presentX - 50));
+      const laneIndex = LANES.findIndex((l) => l.id === event.pattern);
+      if (laneIndex === -1) return;
+
+      const lane = LANES[laneIndex];
+      const dotY = laneIndex * laneHeight + (laneHeight / 2);
+
+      const dist = Math.hypot(mouseX - dotX, mouseY - dotY);
+      if (dist < minDistance) {
+        minDistance = dist;
+        closest = {
+          event,
+          cssX: dotX,
+          cssY: dotY,
+          laneLabel: lane.label,
+          laneColor: lane.color,
+        };
+      }
+    });
+
+    setHoveredDot(closest);
+  }, [isPaused, windowMs, pausedTimeRef, totalPausedDurationRef]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    handlePointerCheck(e.clientX, e.clientY);
+  }, [handlePointerCheck]);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length > 0) {
+      handlePointerCheck(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  }, [handlePointerCheck]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length > 0) {
+      handlePointerCheck(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  }, [handlePointerCheck]);
+
+  const handleMouseLeave = useCallback(() => {
+    setHoveredDot(null);
+  }, []);
+
+  const currentNow = isPaused
+    ? (pausedTimeRef.current ?? Date.now()) - totalPausedDurationRef.current
+    : Date.now() - totalPausedDurationRef.current;
 
   return (
-    <div className="w-full flex flex-col gap-0">
+    <div className="w-full h-full flex flex-col flex-1 gap-0">
       {/* Paused badge — lives outside the canvas so it never overlaps dots */}
       <div
         className={`flex items-center justify-center gap-2 py-2 rounded-t-xl text-xs font-semibold tracking-wide transition-all duration-200 ${
@@ -153,17 +276,75 @@ export function CanvasTimeline({
         {isPaused ? (
           <>
             <span>⏸</span>
-            <span>PAUSED — inspecting snapshot</span>
+            <span>PAUSED — Hover or tap on dots to inspect execution details</span>
           </>
         ) : (
           <span>● LIVE</span>
         )}
       </div>
-      <div className="w-full h-105 bg-zinc-950 border border-zinc-800 rounded-b-xl overflow-hidden shadow-2xl">
+
+      <div 
+        ref={containerRef}
+        className="relative w-full flex-1 min-h-[420px] bg-zinc-950 border border-zinc-800 rounded-b-xl overflow-hidden shadow-2xl"
+      >
         <canvas 
           ref={canvasRef} 
-          className="w-full h-full block"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          className={`w-full h-full block ${isPaused ? 'cursor-pointer touch-none' : 'cursor-default'}`}
         />
+
+        {/* Floating Tooltip Card (Only in Paused Mode) */}
+        {isPaused && hoveredDot && (
+          <div 
+            className="absolute z-30 pointer-events-none bg-zinc-900/95 backdrop-blur-md border border-zinc-700/80 rounded-xl p-3.5 text-xs text-white shadow-2xl transition-all duration-150 flex flex-col gap-2 min-w-[230px] max-w-[280px]"
+            style={{ 
+              left: `${Math.min(Math.max(hoveredDot.cssX, 120), (canvasRef.current?.getBoundingClientRect().width || 600) - 120)}px`,
+              top: hoveredDot.cssY < 120 ? `${hoveredDot.cssY + 14}px` : `${hoveredDot.cssY - 14}px`,
+              transform: hoveredDot.cssY < 120 ? 'translateX(-50%)' : 'translate(-50%, -100%)'
+            }}
+          >
+            {/* Header with Pattern Color Badge */}
+            <div className="flex items-center justify-between gap-2 pb-2 border-b border-zinc-800">
+              <div className="flex items-center gap-2">
+                <span 
+                  className="w-2.5 h-2.5 rounded-full inline-block shrink-0 shadow-sm"
+                  style={{ backgroundColor: hoveredDot.laneColor, boxShadow: `0 0 8px ${hoveredDot.laneColor}` }}
+                />
+                <span className="font-bold text-zinc-100 text-sm">{hoveredDot.laneLabel}</span>
+              </div>
+              <span className="font-mono text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded">
+                {hoveredDot.event.pattern}
+              </span>
+            </div>
+
+            {/* Timing & Latency Metrics */}
+            <div className="grid grid-cols-2 gap-2 text-zinc-300">
+              <div className="bg-zinc-950/60 p-2 rounded border border-zinc-800/80">
+                <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">Time Ago</div>
+                <div className="font-mono font-semibold text-teal-400 text-xs mt-0.5">
+                  -{((currentNow - hoveredDot.event.timestamp) / 1000).toFixed(2)}s
+                </div>
+              </div>
+              <div className="bg-zinc-950/60 p-2 rounded border border-zinc-800/80">
+                <div className="text-[10px] text-zinc-500 font-medium uppercase tracking-wider">Trigger Latency</div>
+                <div className="font-mono font-semibold text-amber-400 text-xs mt-0.5">
+                  {hoveredDot.event.pattern === 'raw' 
+                    ? '0ms (Trigger)' 
+                    : `+${Math.max(0, Math.round(hoveredDot.event.timestamp - (hoveredDot.event.triggerTimestamp ?? hoveredDot.event.timestamp)))}ms`
+                  }
+                </div>
+              </div>
+            </div>
+
+            {/* Pattern Context Description */}
+            <p className="text-[11px] text-zinc-400 leading-relaxed bg-zinc-950/40 p-2 rounded border border-zinc-800/50">
+              {getPatternNote(hoveredDot.event.pattern)}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
