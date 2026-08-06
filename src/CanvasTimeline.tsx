@@ -195,21 +195,21 @@ export function CanvasTimeline({
     };
   }, [windowMs, pausedTimeRef, totalPausedDurationRef]);
 
-  // Handle canvas mouse movement for tooltip hit-testing in paused mode
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Unified pointer check helper for mouse and touch events
+  const handlePointerCheck = useCallback((clientX: number, clientY: number) => {
     if (!isPaused) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+    const mouseX = clientX - rect.left;
+    const mouseY = clientY - rect.top;
 
     const now = (pausedTimeRef.current ?? Date.now()) - totalPausedDurationRef.current;
     const presentX = rect.width - 30;
     const laneHeight = rect.height / LANES.length;
 
     let closest: HoveredDotInfo | null = null;
-    let minDistance = 14; // Hit test distance threshold in pixels
+    let minDistance = 18; // 18px hit radius for easy mouse & mobile touch interaction
 
     eventsRef.current.forEach((event) => {
       const age = now - event.timestamp;
@@ -239,6 +239,22 @@ export function CanvasTimeline({
     setHoveredDot(closest);
   }, [isPaused, windowMs, pausedTimeRef, totalPausedDurationRef]);
 
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
+    handlePointerCheck(e.clientX, e.clientY);
+  }, [handlePointerCheck]);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length > 0) {
+      handlePointerCheck(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  }, [handlePointerCheck]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent<HTMLCanvasElement>) => {
+    if (e.touches.length > 0) {
+      handlePointerCheck(e.touches[0].clientX, e.touches[0].clientY);
+    }
+  }, [handlePointerCheck]);
+
   const handleMouseLeave = useCallback(() => {
     setHoveredDot(null);
   }, []);
@@ -248,7 +264,7 @@ export function CanvasTimeline({
     : Date.now() - totalPausedDurationRef.current;
 
   return (
-    <div className="w-full flex flex-col gap-0">
+    <div className="w-full h-full flex flex-col flex-1 gap-0">
       {/* Paused badge — lives outside the canvas so it never overlaps dots */}
       <div
         className={`flex items-center justify-center gap-2 py-2 rounded-t-xl text-xs font-semibold tracking-wide transition-all duration-200 ${
@@ -260,7 +276,7 @@ export function CanvasTimeline({
         {isPaused ? (
           <>
             <span>⏸</span>
-            <span>PAUSED — Hover on dots to inspect execution details</span>
+            <span>PAUSED — Hover or tap on dots to inspect execution details</span>
           </>
         ) : (
           <span>● LIVE</span>
@@ -269,13 +285,15 @@ export function CanvasTimeline({
 
       <div 
         ref={containerRef}
-        className="relative w-full h-105 bg-zinc-950 border border-zinc-800 rounded-b-xl overflow-hidden shadow-2xl"
+        className="relative w-full flex-1 min-h-[420px] bg-zinc-950 border border-zinc-800 rounded-b-xl overflow-hidden shadow-2xl"
       >
         <canvas 
           ref={canvasRef} 
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
-          className={`w-full h-full block ${isPaused ? 'cursor-pointer' : 'cursor-default'}`}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          className={`w-full h-full block ${isPaused ? 'cursor-pointer touch-none' : 'cursor-default'}`}
         />
 
         {/* Floating Tooltip Card (Only in Paused Mode) */}

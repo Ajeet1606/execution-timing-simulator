@@ -7,7 +7,7 @@ import {
   useBatcher 
 } from '@tanstack/react-pacer';
 import { Button } from '@/components/ui/button';
-import { Play, Pause } from 'lucide-react';
+import { Play, Pause, BookOpen } from 'lucide-react';
 import { CanvasTimeline, TimelineEvent, PatternType } from './CanvasTimeline';
 import { DocsModal } from './DocsModal';
 
@@ -118,109 +118,127 @@ export function ExecutionSimulator() {
   return (
     <div className="max-w-5xl mx-auto p-8 bg-zinc-950 text-white min-h-screen flex flex-col justify-between">
       <div className="grow">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Execution Timing Simulator</h1>
-          <p className="text-zinc-400">
-            Click rapidly to see how different architectural patterns handle high-frequency events.
-          </p>
+        {/* Prominent Header with Primary Documentation Action */}
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-zinc-800/80">
+          <div>
+            <h1 className="text-3xl font-bold mb-2 tracking-tight text-white flex items-center gap-3">
+              Execution Timing Simulator
+            </h1>
+            <p className="text-zinc-400 text-sm">
+              Click rapidly to see how different architectural patterns handle high-frequency events.
+            </p>
+          </div>
+
+          <Button 
+            onClick={() => setShowDoc(true)}
+            className="cursor-pointer shrink-0 bg-teal-950/40 hover:bg-teal-900/60 border border-teal-500/40 hover:border-teal-400 text-teal-300 hover:text-white px-4 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2 text-sm font-semibold"
+          >
+            <BookOpen className="h-4 w-4 text-teal-400" />
+            Pattern Documentation
+          </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:items-stretch">
           {/* Controls Panel */}
-          <div className="md:col-span-1 space-y-4">
-            <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl shadow-lg">
-              <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-4">
-                Controls
-              </h2>
-              
-              <Button 
-                onClick={triggerAll}
-                className="cursor-pointer w-full h-16 text-lg font-bold bg-teal-600 hover:bg-teal-500 active:scale-95 transition-all shadow-teal-900/20 shadow-xl mb-4"
-              >
-                Trigger Event
-              </Button>
+          <div className="md:col-span-1 flex flex-col h-full">
+            <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl shadow-lg flex flex-col justify-between flex-1 h-full">
+              <div>
+                <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-4">
+                  Controls
+                </h2>
+                
+                <Button 
+                  onClick={triggerAll}
+                  className="cursor-pointer w-full h-16 text-lg font-bold bg-teal-600 hover:bg-teal-500 active:scale-95 transition-all shadow-teal-900/20 shadow-xl mb-4"
+                >
+                  Trigger Event
+                </Button>
 
-              <Button 
-                onClick={() => {
-                  setIsPaused((prev) => {
-                    const next = !prev;
-                    isPausedRef.current = next;
-                    if (next) {
-                      // Snapshot the current wall-clock time as the pause point
-                      pausedTimeRef.current = Date.now();
-                    } else {
-                      // Accumulate the elapsed pause duration before resuming
-                      if (pausedTimeRef.current !== null) {
-                        totalPausedDurationRef.current += Date.now() - pausedTimeRef.current;
-                        pausedTimeRef.current = null;
+                <Button 
+                  onClick={() => {
+                    setIsPaused((prev) => {
+                      const next = !prev;
+                      isPausedRef.current = next;
+                      if (next) {
+                        // Snapshot the current wall-clock time as the pause point
+                        pausedTimeRef.current = Date.now();
+                      } else {
+                        // Accumulate the elapsed pause duration before resuming
+                        if (pausedTimeRef.current !== null) {
+                          totalPausedDurationRef.current += Date.now() - pausedTimeRef.current;
+                          pausedTimeRef.current = null;
+                        }
                       }
-                    }
-                    return next;
-                  });
-                }}
-                className={`w-full h-12 text-sm font-semibold transition-all mb-4 gap-2 flex items-center justify-center cursor-pointer ${
-                  isPaused 
-                    ? "bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/20 shadow-xl border border-transparent" 
-                    : "border border-zinc-700 hover:bg-zinc-800 text-white bg-transparent"
-                }`}
-              >
-                {isPaused ? (
-                  <>
-                    <Play className="h-4 w-4 fill-current" />
-                    Resume Simulation
-                  </>
-                ) : (
-                  <>
-                    <Pause className="h-4 w-4 fill-current" />
-                    Pause Simulation
-                  </>
-                )}
-              </Button>
-              
-              <Button 
-                onClick={() => setEvents([])}
-                variant="outline"
-                className="w-full border-zinc-700 hover:bg-zinc-300 text-zinc-900 cursor-pointer"
-              >
-                Clear Timeline
-              </Button>
+                      return next;
+                    });
+                  }}
+                  className={`w-full h-12 text-sm font-semibold transition-all mb-4 gap-2 flex items-center justify-center cursor-pointer ${
+                    isPaused 
+                      ? "bg-amber-600 hover:bg-amber-500 text-white shadow-amber-900/20 shadow-xl border border-transparent" 
+                      : "border border-zinc-700 hover:bg-zinc-800 text-white bg-transparent"
+                  }`}
+                >
+                  {isPaused ? (
+                    <>
+                      <Play className="h-4 w-4 fill-current" />
+                      Resume Simulation
+                    </>
+                  ) : (
+                    <>
+                      <Pause className="h-4 w-4 fill-current" />
+                      Pause Simulation
+                    </>
+                  )}
+                </Button>
+                
+                <Button 
+                  onClick={() => setEvents([])}
+                  variant="outline"
+                  className="w-full border-zinc-700 hover:bg-zinc-300 text-zinc-900 cursor-pointer"
+                >
+                  Clear Timeline
+                </Button>
 
-              {/* Time Window Slider */}
-              <div className="mt-8">
-                <div className="flex justify-between items-center mb-2">
-                  <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-                    Timeline Speed
-                  </label>
-                  <span className="text-xs font-mono text-zinc-300 bg-zinc-800 px-2 py-1 rounded">
-                    {windowMs / 1000}s
-                  </span>
+                {/* Time Window Slider */}
+                <div className="mt-8">
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                      Timeline Speed
+                    </label>
+                    <span className="text-xs font-mono text-zinc-300 bg-zinc-800 px-2 py-1 rounded">
+                      {windowMs / 1000}s
+                    </span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="2000" 
+                    max="15000" 
+                    step="1000"
+                    value={windowMs} 
+                    onChange={(e) => setWindowMs(Number(e.target.value))}
+                    className="w-full accent-teal-500 cursor-pointer"
+                  />
+                  <p className="text-[10px] text-zinc-500 mt-2">
+                    Adjust how much history is visible on screen.
+                  </p>
                 </div>
-                <input 
-                  type="range" 
-                  min="2000" 
-                  max="15000" 
-                  step="1000"
-                  value={windowMs} 
-                  onChange={(e) => setWindowMs(Number(e.target.value))}
-                  className="w-full accent-teal-500 cursor-pointer"
-                />
-                <p className="text-[10px] text-zinc-500 mt-2">
-                  Adjust how much history is visible on screen.
-                </p>
               </div>
 
-              <Button 
-                onClick={() => setShowDoc(true)}
-                variant="link"
-                className="w-full cursor-pointer text-teal-500 pt-12 text-xl"
-              >
-                Read Docs
-              </Button>
+              {/* Sidebar Secondary Resource Button */}
+              <div className="mt-8 pt-6 border-t border-zinc-800/80">
+                <Button 
+                  onClick={() => setShowDoc(true)}
+                  className="w-full bg-teal-950/30 hover:bg-teal-900/50 border border-teal-800/60 hover:border-teal-500/60 text-teal-300 hover:text-white cursor-pointer flex items-center justify-center gap-2 h-11 text-xs font-semibold rounded-xl transition-all shadow-sm"
+                >
+                  <BookOpen className="h-4 w-4 text-teal-400 shrink-0" />
+                  Pattern Docs & Guide
+                </Button>
+              </div>
             </div>
           </div>
 
           {/* Timeline Visualization Panel */}
-          <div className="md:col-span-3">
+          <div className="md:col-span-3 flex flex-col h-full">
             <CanvasTimeline 
               events={events} 
               windowMs={windowMs} 

@@ -9,6 +9,8 @@
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss)](https://tailwindcss.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
+![Execution Timing Simulator Live Preview](./public/demo.png)
+
 ---
 
 ## 📌 Table of Contents
@@ -37,7 +39,7 @@ High-frequency events like button clicks, window resizing, keystrokes, and scrol
 
 **Execution Timing Simulator** is designed to demystify how senior developers handle rate limiting and event pacing. Built on top of HTML5 Canvas and powered by `@tanstack/react-pacer`, it renders real-time side-by-side timeline streams comparing raw user interactions against 5 core execution timing strategies.
 
-Whether you're learning frontend performance optimization or deciding between debouncing vs. throttling for your next feature, this tool gives you instant visual feedback on dropped, delayed, and batched execution frames.
+Whether you're learning frontend performance optimization or deciding between debouncing vs. throttling for your next feature, this tool gives you instant visual feedback on dropped, delayed, and batched execution frames. It allows you to **pause time at any snapshot** and hover/tap on event dots to inspect execution latency ($\Delta t$) and pattern descriptions.
 
 ---
 
