@@ -31,66 +31,88 @@ export function ExecutionSimulator() {
     return Date.now() - totalPausedDurationRef.current;
   }, []);
 
-  // Helper to push new dots to our visualizer
-  const logEvent = useCallback((pattern: PatternType) => {
+  // Helper to push new dots to our visualizer with optional triggerTimestamp baseline
+  const logEvent = useCallback((pattern: PatternType, triggerTimestamp?: number) => {
+    const now = getVirtualNow();
     setEvents((prev) => [
       ...prev, 
-      { id: Math.random().toString(36).substring(2, 9), timestamp: getVirtualNow(), pattern }
+      { 
+        id: Math.random().toString(36).substring(2, 9), 
+        timestamp: now, 
+        triggerTimestamp: triggerTimestamp ?? now,
+        pattern 
+      }
     ]);
   }, [getVirtualNow]);
 
   // 1. Debounce
   const handleDebounce = useDebouncedCallback(
-    useCallback(() => logEvent('debounce'), [logEvent]), 
+    useCallback((tTime?: number) => logEvent('debounce', tTime), [logEvent]), 
     { wait: 500 }
   );
 
   // 2. Throttle
   const handleThrottle = useThrottledCallback(
-    useCallback(() => logEvent('throttle'), [logEvent]), 
+    useCallback((tTime?: number) => logEvent('throttle', tTime), [logEvent]), 
     { wait: 500 }
   );
 
   // 3. Rate Limit
   const handleRateLimit = useRateLimitedCallback(
-    useCallback(() => logEvent('rateLimit'), [logEvent]), 
+    useCallback((tTime?: number) => logEvent('rateLimit', tTime), [logEvent]), 
     { limit: 3, window: 2000 }
   );
 
   // 4. Queue
-  const processQueue = useCallback(async (taskId: string) => {
-    console.log(taskId)
-    logEvent('queue');
+  const processQueue = useCallback(async (itemPayload: string) => {
+    let tTime: number | undefined;
+    try {
+      const parsed = JSON.parse(itemPayload);
+      tTime = parsed.triggerTimestamp;
+    } catch {
+      // Fallback if plain string
+    }
+    logEvent('queue', tTime);
     await new Promise(resolve => setTimeout(resolve, 400)); 
   }, [logEvent]);
   
   const handleQueue = useAsyncQueuer(processQueue, { concurrency: 1, started: true });
 
   // 5. Batch
-  const processBatch = useCallback(async () => {
-    logEvent('batch');
+  const processBatch = useCallback(async (items: string[]) => {
+    let tTime: number | undefined;
+    if (items && items.length > 0) {
+      try {
+        const parsed = JSON.parse(items[0]);
+        tTime = parsed.triggerTimestamp;
+      } catch {
+        // Fallback
+      }
+    }
+    logEvent('batch', tTime);
   }, [logEvent]);
 
   const handleBatch = useBatcher(processBatch, { maxSize: 5, wait: 1000, started: true });
 
   // The Master Trigger
- // The Master Trigger
   const triggerAll = () => {
-    logEvent('raw');
+    const triggerTime = getVirtualNow();
+    logEvent('raw', triggerTime);
 
-    // Create a guaranteed string ID that works on HTTP localhost
+    // Package payload with trigger timestamp for queue/batch latency tracking
     const safeId = Math.random().toString(36).substring(2, 9);
+    const payload = JSON.stringify({ id: safeId, triggerTimestamp: triggerTime });
 
-    handleDebounce();
-    handleThrottle();
-    handleRateLimit();
+    handleDebounce(triggerTime);
+    handleThrottle(triggerTime);
+    handleRateLimit(triggerTime);
     
     // Fix: Force the queue engine to wake up before adding the item
     if (handleQueue.start) handleQueue.start();
 
     // Fix: Use the correct class method to push items into memory
-    handleQueue.addItem(safeId); 
-    handleBatch.addItem(safeId); 
+    handleQueue.addItem(payload); 
+    handleBatch.addItem(payload); 
   };
 
   return (
