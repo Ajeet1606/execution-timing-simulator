@@ -1,4 +1,4 @@
-# Execution Timing Simulator ⚡️
+# Execution Timing Simulator(ETS) ⚡️
 
 > An interactive, real-time browser tool for visualizing and comparing JavaScript execution timing and event rate control patterns: **Debounce**, **Throttle**, **Rate Limit**, **Async Queue**, and **Batching**.
 
