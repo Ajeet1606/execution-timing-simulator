@@ -171,7 +171,7 @@ export function ExecutionSimulator() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:items-stretch">
           {/* Controls Panel */}
-          <div className="md:col-span-1 flex flex-col h-full md:h-117.5">
+          <div className="md:col-span-1 flex flex-col h-full md:h-136.25">
             <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl shadow-lg flex flex-col flex-1 h-full overflow-y-auto">
               <div>
                 <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-4">
