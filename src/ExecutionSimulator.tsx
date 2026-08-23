@@ -10,12 +10,24 @@ import { Button } from '@/components/ui/button';
 import { Play, Pause, BookOpen } from 'lucide-react';
 import { CanvasTimeline, TimelineEvent, PatternType } from './CanvasTimeline';
 import { DocsModal } from './DocsModal';
+import { StrategyConfig, StrategyConfiguration } from './StrategyConfig';
+
+const DEFAULT_STRATEGY_CONFIG: StrategyConfiguration = {
+  debounceWait: 500,
+  throttleWait: 500,
+  rateLimitCount: 3,
+  rateLimitWindow: 2000,
+  batchMaxSize: 5,
+  batchMaxWait: 1000,
+  queueConcurrency: 1,
+};
 
 export function ExecutionSimulator() {
   const [events, setEvents] = useState<TimelineEvent[]>([]);
   const [windowMs, setWindowMs] = useState(6000);
   const [isPaused, setIsPaused] = useState(false);
   const [showDoc, setShowDoc] = useState(false);
+  const [strategyConfig, setStrategyConfig] = useState<StrategyConfiguration>(DEFAULT_STRATEGY_CONFIG);
 
   // Refs for tracking pause duration offsets
   const isPausedRef = useRef(isPaused);
@@ -48,19 +60,19 @@ export function ExecutionSimulator() {
   // 1. Debounce
   const handleDebounce = useDebouncedCallback(
     useCallback((tTime?: number) => logEvent('debounce', tTime), [logEvent]), 
-    { wait: 500 }
+    { wait: strategyConfig.debounceWait }
   );
 
   // 2. Throttle
   const handleThrottle = useThrottledCallback(
     useCallback((tTime?: number) => logEvent('throttle', tTime), [logEvent]), 
-    { wait: 500 }
+    { wait: strategyConfig.throttleWait }
   );
 
   // 3. Rate Limit
   const handleRateLimit = useRateLimitedCallback(
     useCallback((tTime?: number) => logEvent('rateLimit', tTime), [logEvent]), 
-    { limit: 3, window: 2000 }
+    { limit: strategyConfig.rateLimitCount, window: strategyConfig.rateLimitWindow }
   );
 
   // 4. Queue
@@ -76,7 +88,7 @@ export function ExecutionSimulator() {
     await new Promise(resolve => setTimeout(resolve, 400)); 
   }, [logEvent]);
   
-  const handleQueue = useAsyncQueuer(processQueue, { concurrency: 1, started: true });
+  const handleQueue = useAsyncQueuer(processQueue, { concurrency: strategyConfig.queueConcurrency, started: true });
 
   // 5. Batch
   const processBatch = useCallback(async (items: string[]) => {
@@ -92,7 +104,11 @@ export function ExecutionSimulator() {
     logEvent('batch', tTime);
   }, [logEvent]);
 
-  const handleBatch = useBatcher(processBatch, { maxSize: 5, wait: 1000, started: true });
+  const handleBatch = useBatcher(processBatch, {
+    maxSize: strategyConfig.batchMaxSize,
+    wait: strategyConfig.batchMaxWait,
+    started: true,
+  });
 
   // The Master Trigger
   const triggerAll = () => {
@@ -140,8 +156,8 @@ export function ExecutionSimulator() {
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:items-stretch">
           {/* Controls Panel */}
-          <div className="md:col-span-1 flex flex-col h-full">
-            <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl shadow-lg flex flex-col justify-between flex-1 h-full">
+          <div className="md:col-span-1 flex flex-col h-full md:h-[470px]">
+            <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl shadow-lg flex flex-col flex-1 h-full overflow-y-auto">
               <div>
                 <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-4">
                   Controls
@@ -222,10 +238,15 @@ export function ExecutionSimulator() {
                     Adjust how much history is visible on screen.
                   </p>
                 </div>
+
+                {/* Strategy Configuration */}
+                <div className="mt-8">
+                  <StrategyConfig config={strategyConfig} onChange={setStrategyConfig} />
+                </div>
               </div>
 
               {/* Sidebar Secondary Resource Button */}
-              <div className="mt-8 pt-6 border-t border-zinc-800/80">
+              <div className="pt-6 mt-8 border-t border-zinc-800/80">
                 <Button 
                   onClick={() => setShowDoc(true)}
                   className="w-full bg-teal-950/30 hover:bg-teal-900/50 border border-teal-800/60 hover:border-teal-500/60 text-teal-300 hover:text-white cursor-pointer flex items-center justify-center gap-2 h-11 text-xs font-semibold rounded-xl transition-all shadow-sm"
@@ -238,7 +259,7 @@ export function ExecutionSimulator() {
           </div>
 
           {/* Timeline Visualization Panel */}
-          <div className="md:col-span-3 flex flex-col h-full">
+          <div className="md:col-span-3 flex flex-col h-full md:h-[545px]">
             <CanvasTimeline 
               events={events} 
               windowMs={windowMs} 
