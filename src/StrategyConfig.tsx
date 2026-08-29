@@ -68,43 +68,119 @@ export function StrategyConfig({ config, onChange }: StrategyConfigProps) {
   };
 
   return (
-    <Card className="w-full border-zinc-800 bg-zinc-950/40 py-4 text-zinc-100 shadow-none">
-      <CardHeader className="px-0">
-        <CardTitle className="text-sm font-semibold uppercase tracking-wider text-zinc-300">Strategy settings</CardTitle>
-        <CardDescription>
-          Adjust a pattern, then trigger events to see its new behavior.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="px-0">
-        <Accordion defaultValue={["debounce"]}>
-          <AccordionItem value="debounce">
-            <AccordionTrigger className="text-zinc-200 hover:text-teal-300">Debounce</AccordionTrigger>
-            <AccordionContent className="pt-2"><RangeControl label="Wait" value={config.debounceWait} min={50} max={3000} step={50} unit="ms" onChange={(value) => update('debounceWait', value)} /></AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="throttle">
-            <AccordionTrigger className="text-zinc-200 hover:text-teal-300">Throttle</AccordionTrigger>
-            <AccordionContent className="pt-2"><RangeControl label="Wait" value={config.throttleWait} min={50} max={3000} step={50} unit="ms" onChange={(value) => update('throttleWait', value)} /></AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="rate-limit">
-            <AccordionTrigger className="text-zinc-200 hover:text-teal-300">Rate limit</AccordionTrigger>
-            <AccordionContent className="space-y-4 pt-2">
-              <RangeControl label="Limit" value={config.rateLimitCount} min={1} max={10} onChange={(value) => update('rateLimitCount', value)} />
-              <RangeControl label="Window" value={config.rateLimitWindow} min={100} max={5000} step={100} unit="ms" onChange={(value) => update('rateLimitWindow', value)} />
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="batching">
-            <AccordionTrigger className="text-zinc-200 hover:text-teal-300">Batching</AccordionTrigger>
-            <AccordionContent className="space-y-4 pt-2">
-              <RangeControl label="Max size" value={config.batchMaxSize} min={1} max={20} onChange={(value) => update('batchMaxSize', value)} />
-              <RangeControl label="Max wait" value={config.batchMaxWait} min={100} max={5000} step={100} unit="ms" onChange={(value) => update('batchMaxWait', value)} />
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="async-queue">
-            <AccordionTrigger className="text-zinc-200 hover:text-teal-300">Async queue</AccordionTrigger>
-            <AccordionContent className="pt-2"><RangeControl label="Concurrency" value={config.queueConcurrency} min={1} max={5} onChange={(value) => update('queueConcurrency', value)} /></AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </CardContent>
+    <Card className="w-full border-zinc-800 bg-zinc-950/40 p-4 text-zinc-100 shadow-none">
+      <Accordion defaultValue={[]}>
+        <AccordionItem value="strategy-settings" className="border-b-0">
+          <AccordionTrigger className="py-0 hover:no-underline hover:cursor-pointer">
+            <CardHeader className="px-0">
+              <CardTitle className="text-sm font-semibold uppercase tracking-wider text-zinc-300">
+                Strategy settings
+              </CardTitle>
+              <CardDescription>
+                Tune a pattern, then trigger events to see the effect.
+              </CardDescription>
+            </CardHeader>
+          </AccordionTrigger>
+          <AccordionContent className="px-0">
+            <CardContent className="px-0">
+              <Accordion defaultValue={["debounce"]}>
+                <AccordionItem value="debounce">
+                  <AccordionTrigger className="text-zinc-200 hover:text-teal-300 hover:cursor-pointer">
+                    Debounce
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2">
+                    <RangeControl
+                      label="Wait"
+                      value={config.debounceWait}
+                      min={50}
+                      max={3000}
+                      step={50}
+                      unit="ms"
+                      onChange={(value) => update("debounceWait", value)}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="throttle">
+                  <AccordionTrigger className="text-zinc-200 hover:text-teal-300 hover:cursor-pointer">
+                    Throttle
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2">
+                    <RangeControl
+                      label="Wait"
+                      value={config.throttleWait}
+                      min={50}
+                      max={3000}
+                      step={50}
+                      unit="ms"
+                      onChange={(value) => update("throttleWait", value)}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="rate-limit">
+                  <AccordionTrigger className="text-zinc-200 hover:text-teal-300 hover:cursor-pointer">
+                    Rate limit
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-2">
+                    <RangeControl
+                      label="Limit"
+                      value={config.rateLimitCount}
+                      min={1}
+                      max={10}
+                      onChange={(value) => update("rateLimitCount", value)}
+                    />
+                    <RangeControl
+                      label="Window"
+                      value={config.rateLimitWindow}
+                      min={100}
+                      max={5000}
+                      step={100}
+                      unit="ms"
+                      onChange={(value) => update("rateLimitWindow", value)}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="batching">
+                  <AccordionTrigger className="text-zinc-200 hover:text-teal-300 hover:cursor-pointer">
+                    Batching
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-2">
+                    <RangeControl
+                      label="Max size"
+                      value={config.batchMaxSize}
+                      min={1}
+                      max={20}
+                      onChange={(value) => update("batchMaxSize", value)}
+                    />
+                    <RangeControl
+                      label="Max wait"
+                      value={config.batchMaxWait}
+                      min={100}
+                      max={5000}
+                      step={100}
+                      unit="ms"
+                      onChange={(value) => update("batchMaxWait", value)}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+                <AccordionItem value="async-queue">
+                  <AccordionTrigger className="text-zinc-200 hover:text-teal-300 hover:cursor-pointer">
+                    Async queue
+                  </AccordionTrigger>
+                  <AccordionContent className="pt-2">
+                    <RangeControl
+                      label="Concurrency"
+                      value={config.queueConcurrency}
+                      min={1}
+                      max={5}
+                      onChange={(value) => update("queueConcurrency", value)}
+                    />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </Card>
   );
 }
