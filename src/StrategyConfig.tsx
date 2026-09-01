@@ -72,7 +72,7 @@ export function StrategyConfig({ config, onChange }: StrategyConfigProps) {
       <Accordion defaultValue={[]}>
         <AccordionItem value="strategy-settings" className="border-b-0">
           <AccordionTrigger className="py-0 hover:no-underline hover:cursor-pointer">
-            <CardHeader className="px-0">
+            <CardHeader className="flex-1 px-0">
               <CardTitle className="text-sm font-semibold uppercase tracking-wider text-zinc-300">
                 Strategy settings
               </CardTitle>
